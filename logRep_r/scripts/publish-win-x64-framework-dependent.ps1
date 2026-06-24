@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$OutputDirectory = "artifacts\publish\win-x64"
+    [string]$OutputDirectory = "artifacts\publish\win-x64-framework-dependent"
 )
 
 $ErrorActionPreference = "Stop"
@@ -41,8 +41,8 @@ dotnet publish `
     $projectPath `
     -c Release `
     -r win-x64 `
-    --self-contained true `
-    -p:PublishProfile=win-x64 `
+    --self-contained false `
+    -p:PublishProfile=win-x64-framework-dependent `
     -o $publishDirectory
 
 if ($LASTEXITCODE -ne 0) {

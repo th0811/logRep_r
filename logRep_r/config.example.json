@@ -17,7 +17,7 @@
   "hash_algorithm": "sha1",
   "log_level": "info",
   "auto_start_collection_on_launch": false,
-  "minimize_to_tray_while_collecting": true,
+  "minimize_to_tray_while_collecting": false,
   "minimize_button_behavior": "tray",
   "close_button_behavior": "tray_when_collecting",
   "show_tray_notifications": true

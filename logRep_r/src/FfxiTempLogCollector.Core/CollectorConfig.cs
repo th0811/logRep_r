@@ -39,7 +39,7 @@ public sealed class CollectorConfig
 
     public bool AutoStartCollectionOnLaunch { get; set; }
 
-    public bool MinimizeToTrayWhileCollecting { get; set; } = true;
+    public bool MinimizeToTrayWhileCollecting { get; set; }
 
     public string MinimizeButtonBehavior { get; set; } = "tray";
 
