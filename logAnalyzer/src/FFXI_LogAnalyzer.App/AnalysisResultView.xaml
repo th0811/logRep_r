@@ -1,0 +1,104 @@
+<UserControl x:Class="FFXI_LogAnalyzer.App.AnalysisResultView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:FFXI_LogAnalyzer.App"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="420"
+             d:DesignWidth="900">
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top"
+                   Text="{Binding StatusMessage}"
+                   FontWeight="Bold"
+                   Margin="0,0,0,8" />
+
+        <TabControl>
+            <TabItem Header="キャラクター別サマリ">
+                <DockPanel>
+                    <GroupBox DockPanel.Dock="Top"
+                              Header="actor表示"
+                              Margin="0,0,0,8"
+                              Padding="8">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding ActorVisibilities}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding Actor}"
+                                                  IsChecked="{Binding IsVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  Margin="0,0,16,4" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </GroupBox>
+
+                    <DataGrid ItemsSource="{Binding ActorSummaries}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="actor名" Binding="{Binding Actor}" Width="150" />
+                            <DataGridTextColumn Header="総与ダメージ" Binding="{Binding TotalDamage}" Width="110" />
+                            <DataGridTextColumn Header="DPS" Binding="{Binding Dps}" Width="90" />
+                            <DataGridTextColumn Header="DPS時間信頼度" Binding="{Binding DpsTimeConfidence}" Width="120" />
+                            <DataGridTextColumn Header="通常攻撃命中率" Binding="{Binding NormalAttackHitRate}" Width="120" />
+                            <DataGridTextColumn Header="通常攻撃クリティカル率" Binding="{Binding NormalAttackCriticalRate}" Width="150" />
+                            <DataGridTextColumn Header="総使用回数" Binding="{Binding TotalUseCount}" Width="100" />
+                            <DataGridTextColumn Header="総命中回数" Binding="{Binding TotalHitCount}" Width="100" />
+                            <DataGridTextColumn Header="総非命中回数" Binding="{Binding TotalMissCount}" Width="110" />
+                            <DataGridTextColumn Header="unknown件数" Binding="{Binding UnknownCount}" Width="100" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem Header="技/魔法/通常攻撃別集計">
+                <DataGrid ItemsSource="{Binding ActionSummaries}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="actor名" Binding="{Binding Actor}" Width="140" />
+                        <DataGridTextColumn Header="action_name" Binding="{Binding ActionName}" Width="170" />
+                        <DataGridTextColumn Header="action_type" Binding="{Binding ActionType}" Width="140" />
+                        <DataGridTextColumn Header="使用回数" Binding="{Binding UseCount}" Width="90" />
+                        <DataGridTextColumn Header="命中回数" Binding="{Binding HitCount}" Width="90" />
+                        <DataGridTextColumn Header="非命中回数" Binding="{Binding MissCount}" Width="100" />
+                        <DataGridTextColumn Header="unknown件数" Binding="{Binding UnknownCount}" Width="100" />
+                        <DataGridTextColumn Header="命中率" Binding="{Binding HitRate}" Width="90" />
+                        <DataGridTextColumn Header="総ダメージ" Binding="{Binding TotalDamage}" Width="100" />
+                        <DataGridTextColumn Header="最大ダメージ" Binding="{Binding MaxDamage}" Width="100" />
+                        <DataGridTextColumn Header="最小ダメージ" Binding="{Binding MinDamage}" Width="100" />
+                        <DataGridTextColumn Header="平均ダメージ" Binding="{Binding AverageDamage}" Width="100" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="未解析ログ">
+                <local:UnparsedLogView />
+            </TabItem>
+
+            <TabItem Header="セッション情報">
+                <DataGrid ItemsSource="{Binding SessionRows}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="項目" Binding="{Binding Label}" Width="240" />
+                        <DataGridTextColumn Header="値" Binding="{Binding Value}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</UserControl>

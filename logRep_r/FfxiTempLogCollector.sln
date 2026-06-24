@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CB1CED9F-BE0E-4AA0-9412-ED2122420DF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FfxiTempLogCollector.App", "src\FfxiTempLogCollector.App\FfxiTempLogCollector.App.csproj", "{60FAEF68-9E6C-46C6-B531-3208038FEF58}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FfxiTempLogCollector.Core", "src\FfxiTempLogCollector.Core\FfxiTempLogCollector.Core.csproj", "{3968D9CE-D287-4BB4-8265-DAC40EFEF7F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FfxiTempLogCollector.Ipc", "src\FfxiTempLogCollector.Ipc\FfxiTempLogCollector.Ipc.csproj", "{3164B76A-D14C-40DF-ABE9-F37032852057}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5D7A2FFE-70A8-49D4-8C7E-45FD82CD0129}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FfxiTempLogCollector.Tests", "tests\FfxiTempLogCollector.Tests\FfxiTempLogCollector.Tests.csproj", "{421AC636-F02E-4A6D-86B0-138F0398553B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{60FAEF68-9E6C-46C6-B531-3208038FEF58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60FAEF68-9E6C-46C6-B531-3208038FEF58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60FAEF68-9E6C-46C6-B531-3208038FEF58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60FAEF68-9E6C-46C6-B531-3208038FEF58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3968D9CE-D287-4BB4-8265-DAC40EFEF7F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3968D9CE-D287-4BB4-8265-DAC40EFEF7F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3968D9CE-D287-4BB4-8265-DAC40EFEF7F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3968D9CE-D287-4BB4-8265-DAC40EFEF7F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3164B76A-D14C-40DF-ABE9-F37032852057}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3164B76A-D14C-40DF-ABE9-F37032852057}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3164B76A-D14C-40DF-ABE9-F37032852057}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3164B76A-D14C-40DF-ABE9-F37032852057}.Release|Any CPU.Build.0 = Release|Any CPU
+		{421AC636-F02E-4A6D-86B0-138F0398553B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{421AC636-F02E-4A6D-86B0-138F0398553B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{421AC636-F02E-4A6D-86B0-138F0398553B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{421AC636-F02E-4A6D-86B0-138F0398553B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{60FAEF68-9E6C-46C6-B531-3208038FEF58} = {CB1CED9F-BE0E-4AA0-9412-ED2122420DF7}
+		{3968D9CE-D287-4BB4-8265-DAC40EFEF7F7} = {CB1CED9F-BE0E-4AA0-9412-ED2122420DF7}
+		{3164B76A-D14C-40DF-ABE9-F37032852057} = {CB1CED9F-BE0E-4AA0-9412-ED2122420DF7}
+		{421AC636-F02E-4A6D-86B0-138F0398553B} = {5D7A2FFE-70A8-49D4-8C7E-45FD82CD0129}
+	EndGlobalSection
+EndGlobal

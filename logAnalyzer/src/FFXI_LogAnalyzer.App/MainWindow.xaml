@@ -1,0 +1,72 @@
+<Window x:Class="FFXI_LogAnalyzer.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FFXI_LogAnalyzer.App"
+        mc:Ignorable="d"
+        Title="FFXI_LogAnalyzer" Height="620" Width="960" MinHeight="520" MinWidth="760">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="MinWidth" Value="120" />
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+            <Button Content="セッションフォルダ選択" Command="{Binding OpenSessionCommand}" />
+            <Button Content="分析区間選択へ進む" Command="{Binding ProceedToRangeSelectionCommand}" />
+            <TextBlock Text="{Binding StatusMessage}" Margin="8,0,0,0" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <Border DockPanel.Dock="Top" BorderBrush="#D0D7DE" BorderThickness="1" Padding="10" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="読み込み状態" FontWeight="Bold" Margin="0,0,0,6" />
+                <TextBlock Text="{Binding SelectedFolderPath}" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <TabControl>
+            <TabItem Header="セッション情報">
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <GroupBox Header="セッション情報" Grid.Column="0" Margin="0,0,12,0">
+                        <DataGrid ItemsSource="{Binding SessionInfoRows}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  HeadersVisibility="Column"
+                                  Visibility="{Binding HasSession, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="項目" Binding="{Binding Label}" Width="220" />
+                                <DataGridTextColumn Header="値" Binding="{Binding Value}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </GroupBox>
+
+                    <GroupBox Header="警告" Grid.Column="1">
+                        <ListBox ItemsSource="{Binding Warnings}" />
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="分析区間">
+                <local:AnalysisRangeSelectionView DataContext="{Binding AnalysisRange}" Margin="0,8,0,0" />
+            </TabItem>
+
+            <TabItem Header="分析結果">
+                <local:AnalysisResultView DataContext="{Binding AnalysisResult}" Margin="0,8,0,0" />
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
