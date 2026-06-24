@@ -11,12 +11,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly Dispatcher _dispatcher;
 
     private string _statusText = "停止中";
+    private string _statusForeground = "#FFFFFF";
+    private string _statusBackground = "#162331";
     private string _sessionId = "-";
     private long _rawRecordsWritten;
     private long _canonicalRecordsWritten;
     private string _lastSeenAt = "-";
     private long _warningCount;
     private string _lastError = "-";
+    private bool _isShuttingDown;
 
     public MainViewModel(
         GuiCommandController controller,
@@ -29,19 +32,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         StartCommand = new AsyncRelayCommand(
             StartAsync,
-            () => Status is CollectorStatus.Stopped
-                or CollectorStatus.Error);
+            () => !IsShuttingDown
+                && (Status is CollectorStatus.Stopped
+                    or CollectorStatus.Error));
         StopCommand = new AsyncRelayCommand(
             StopAsync,
-            () => Status is CollectorStatus.Starting
-                or CollectorStatus.Running);
-        SettingsCommand = new RelayCommand(_controller.ShowSettings);
+            () => !IsShuttingDown
+                && (Status is CollectorStatus.Starting
+                    or CollectorStatus.Running));
+        SettingsCommand = new RelayCommand(
+            _controller.ShowSettings,
+            () => !IsShuttingDown);
         OpenOutputCommand = new RelayCommand(
-            _controller.OpenOutputDirectory);
-        OpenLogCommand = new RelayCommand(_controller.OpenLog);
+            _controller.OpenOutputDirectory,
+            () => !IsShuttingDown);
+        OpenLogCommand = new RelayCommand(
+            _controller.OpenLog,
+            () => !IsShuttingDown);
         MinimizeCommand = new RelayCommand(
-            _controller.MinimizeToTray);
-        ExitCommand = new RelayCommand(_controller.Exit);
+            _controller.MinimizeToTray,
+            () => !IsShuttingDown);
+        ExitCommand = new RelayCommand(
+            _controller.Exit,
+            () => !IsShuttingDown);
 
         _controller.Events.StatusChanged += OnStatusChanged;
         _controller.ConfigChanged += OnConfigChanged;
@@ -56,6 +69,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         get => _statusText;
         private set => SetProperty(ref _statusText, value);
+    }
+
+    public string StatusForeground
+    {
+        get => _statusForeground;
+        private set => SetProperty(ref _statusForeground, value);
+    }
+
+    public string StatusBackground
+    {
+        get => _statusBackground;
+        private set => SetProperty(ref _statusBackground, value);
+    }
+
+    public bool IsShuttingDown
+    {
+        get => _isShuttingDown;
+        private set => SetProperty(ref _isShuttingDown, value);
     }
 
     public string TempDirectory => _controller.Config.TempDir;
@@ -117,8 +148,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public async Task InitializeAsync()
     {
         if (_controller.Config.AutoStartCollectionOnLaunch
-            && Status is CollectorStatus.Stopped
-                or CollectorStatus.Error)
+            && (Status is CollectorStatus.Stopped
+                or CollectorStatus.Error))
         {
             await StartAsync();
         }
@@ -134,6 +165,20 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public WindowCloseAction GetCloseAction()
     {
         return _controller.GetCloseAction();
+    }
+
+    public void BeginShutdown()
+    {
+        if (IsShuttingDown)
+        {
+            return;
+        }
+
+        IsShuttingDown = true;
+        StatusText = "終了しています...";
+        StatusForeground = "#FFFFFF";
+        StatusBackground = "#B45309";
+        RaiseCommandCanExecuteChanged();
     }
 
     public void MinimizeToTray()
@@ -191,8 +236,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void ApplyStatus(CollectorStatusSnapshot snapshot)
     {
+        if (IsShuttingDown)
+        {
+            return;
+        }
+
         Status = snapshot.Status;
         StatusText = GetStatusText(snapshot.Status);
+        StatusForeground = GetStatusForeground(snapshot.Status);
+        StatusBackground = GetStatusBackground(snapshot.Status);
         SessionId = string.IsNullOrWhiteSpace(snapshot.SessionId)
             ? "-"
             : snapshot.SessionId;
@@ -207,8 +259,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ? "-"
             : snapshot.LastError;
 
-        StartCommand.RaiseCanExecuteChanged();
-        StopCommand.RaiseCanExecuteChanged();
+        RaiseCommandCanExecuteChanged();
     }
 
     private static string GetStatusText(CollectorStatus status)
@@ -222,6 +273,41 @@ public sealed class MainViewModel : INotifyPropertyChanged
             CollectorStatus.Error => "エラー",
             _ => "不明",
         };
+    }
+
+    private static string GetStatusForeground(CollectorStatus status)
+    {
+        return status switch
+        {
+            CollectorStatus.Running => "#ECFDF5",
+            CollectorStatus.Starting => "#FFFBEB",
+            CollectorStatus.Stopping => "#FFFBEB",
+            CollectorStatus.Error => "#FEF2F2",
+            _ => "#FFFFFF",
+        };
+    }
+
+    private static string GetStatusBackground(CollectorStatus status)
+    {
+        return status switch
+        {
+            CollectorStatus.Running => "#047857",
+            CollectorStatus.Starting => "#B45309",
+            CollectorStatus.Stopping => "#B45309",
+            CollectorStatus.Error => "#B42318",
+            _ => "#162331",
+        };
+    }
+
+    private void RaiseCommandCanExecuteChanged()
+    {
+        StartCommand.RaiseCanExecuteChanged();
+        StopCommand.RaiseCanExecuteChanged();
+        SettingsCommand.RaiseCanExecuteChanged();
+        OpenOutputCommand.RaiseCanExecuteChanged();
+        OpenLogCommand.RaiseCanExecuteChanged();
+        MinimizeCommand.RaiseCanExecuteChanged();
+        ExitCommand.RaiseCanExecuteChanged();
     }
 
     private void SetProperty<T>(

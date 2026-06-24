@@ -37,9 +37,9 @@
                         Margin="24,0,0,0"
                         Padding="16,8"
                         VerticalAlignment="Center"
-                        Background="#162331"
+                        Background="{Binding StatusBackground}"
                         CornerRadius="4">
-                    <TextBlock Foreground="White"
+                    <TextBlock Foreground="{Binding StatusForeground}"
                                FontSize="16"
                                FontWeight="SemiBold"
                                Text="{Binding StatusText}" />

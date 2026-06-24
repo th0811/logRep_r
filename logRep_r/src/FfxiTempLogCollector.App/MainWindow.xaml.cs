@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
 using MessageBox = System.Windows.MessageBox;
 
 namespace FfxiTempLogCollector.App;
@@ -57,6 +59,9 @@ public partial class MainWindow : Window
         }
 
         eventArgs.Cancel = true;
+        _viewModel.BeginShutdown();
+        Cursor = System.Windows.Input.Cursors.Wait;
+        await Dispatcher.Yield(DispatcherPriority.Render);
         IsEnabled = false;
 
         try
@@ -74,6 +79,7 @@ public partial class MainWindow : Window
         }
         finally
         {
+            Cursor = null;
             _shutdownCompleted = true;
             Close();
         }

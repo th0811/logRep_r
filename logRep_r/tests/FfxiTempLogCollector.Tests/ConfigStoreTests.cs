@@ -29,7 +29,7 @@ public sealed class ConfigStoreTests
         Assert.Equal("sha1", config.HashAlgorithm);
         Assert.Equal("info", config.LogLevel);
         Assert.False(config.AutoStartCollectionOnLaunch);
-        Assert.True(config.MinimizeToTrayWhileCollecting);
+        Assert.False(config.MinimizeToTrayWhileCollecting);
         Assert.Equal("tray", config.MinimizeButtonBehavior);
         Assert.Equal("tray_when_collecting", config.CloseButtonBehavior);
         Assert.True(config.ShowTrayNotifications);
