@@ -2,6 +2,8 @@ namespace FFXI_LogAnalyzer.Core;
 
 public sealed class HitStatusClassifier : IHitStatusClassifier
 {
+    private readonly MagicLogClassifier _magicLogClassifier = new();
+
     private static readonly string[] ExcludedKeywords =
     [
         "詠唱中断",
@@ -27,6 +29,11 @@ public sealed class HitStatusClassifier : IHitStatusClassifier
         }
 
         if (damage.HasDamage)
+        {
+            return HitStatus.Hit;
+        }
+
+        if (_magicLogClassifier.HasSuccessfulNonDamageEffect(group))
         {
             return HitStatus.Hit;
         }

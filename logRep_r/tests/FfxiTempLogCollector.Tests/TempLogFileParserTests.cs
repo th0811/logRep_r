@@ -28,7 +28,7 @@ public sealed class TempLogFileParserTests
             "メッセージ",
             eventGroup: "event-4",
             sequenceHint: "sequence-5",
-            templateHint: "template-6");
+            messageTokenCount: "token-6");
         var fileBytes = CreateFile((7, 120, recordBytes));
 
         var actual = _parser.Parse(fileBytes);
@@ -40,7 +40,7 @@ public sealed class TempLogFileParserTests
         Assert.Equal(21, record.MetaFields.Fields.Count);
         Assert.Equal("event-4", record.MetaFields.EventGroup);
         Assert.Equal("sequence-5", record.MetaFields.SequenceHint);
-        Assert.Equal("template-6", record.MetaFields.TemplateHint);
+        Assert.Equal("token-6", record.MetaFields.MessageTokenCount);
         Assert.Equal(
             AddNullTerminator(Encoding.UTF8.GetBytes("メッセージ")),
             record.RawMessageBytes);
@@ -79,7 +79,7 @@ public sealed class TempLogFileParserTests
         var record = Assert.Single(actual.Records);
         Assert.Equal(ParseStatus.Error, record.ParseStatus);
         Assert.Contains(
-            "メタフィールドが5個未満",
+            "メタフィールドが21個未満",
             record.ParseError,
             StringComparison.Ordinal);
         Assert.Equal(invalidRecord, record.RawRecordBytes);
@@ -152,7 +152,7 @@ public sealed class TempLogFileParserTests
             "実ログ",
             eventGroup: "event-4",
             sequenceHint: "sequence-5",
-            templateHint: "template-6");
+            messageTokenCount: "token-6");
         var headerOffset = 100 + 120;
         var fileBytes = CreateFileWithRecordStart(
             (0, headerOffset, 100, recordBytes));
@@ -166,7 +166,7 @@ public sealed class TempLogFileParserTests
         Assert.Equal(21, record.MetaFields.Fields.Count);
         Assert.Equal("event-4", record.MetaFields.EventGroup);
         Assert.Equal("sequence-5", record.MetaFields.SequenceHint);
-        Assert.Equal("template-6", record.MetaFields.TemplateHint);
+        Assert.Equal("token-6", record.MetaFields.MessageTokenCount);
         Assert.Equal(recordBytes, record.RawRecordBytes);
         Assert.Equal(
             AddNullTerminator(Encoding.UTF8.GetBytes("実ログ")),
@@ -177,14 +177,14 @@ public sealed class TempLogFileParserTests
         string message,
         string eventGroup = "4",
         string sequenceHint = "5",
-        string templateHint = "6")
+        string messageTokenCount = "6")
     {
         var fields = Enumerable.Range(0, 21)
             .Select(index => $"field-{index}")
             .ToArray();
         fields[4] = eventGroup;
         fields[5] = sequenceHint;
-        fields[6] = templateHint;
+        fields[6] = messageTokenCount;
 
         var metaBytes = Encoding.ASCII.GetBytes(
             $"{string.Join(',', fields)},");

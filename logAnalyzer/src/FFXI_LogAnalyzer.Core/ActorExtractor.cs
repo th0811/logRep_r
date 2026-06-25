@@ -4,6 +4,7 @@ namespace FFXI_LogAnalyzer.Core;
 
 public sealed partial class ActorExtractor : IActorExtractor
 {
+    private readonly MagicLogClassifier _magicLogClassifier = new();
     private readonly NormalAttackParser _normalAttackParser;
 
     public ActorExtractor()
@@ -21,6 +22,14 @@ public sealed partial class ActorExtractor : IActorExtractor
         if (_normalAttackParser.TryParse(group, out var normalAttack))
         {
             return normalAttack.Actor;
+        }
+
+        if (_magicLogClassifier.TryParseActivation(
+                group,
+                out var activationActor,
+                out _))
+        {
+            return activationActor;
         }
 
         foreach (var text in group.VisibleTexts)

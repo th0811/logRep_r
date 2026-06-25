@@ -4,6 +4,7 @@ namespace FFXI_LogAnalyzer.Core;
 
 public sealed partial class ActionNameExtractor : IActionNameExtractor
 {
+    private readonly MagicLogClassifier _magicLogClassifier = new();
     private readonly NormalAttackParser _normalAttackParser;
 
     public ActionNameExtractor()
@@ -21,6 +22,14 @@ public sealed partial class ActionNameExtractor : IActionNameExtractor
         if (_normalAttackParser.TryParse(group, out var normalAttack))
         {
             return normalAttack.ActionName;
+        }
+
+        if (_magicLogClassifier.TryParseActivation(
+                group,
+                out _,
+                out var magicActionName))
+        {
+            return magicActionName;
         }
 
         foreach (var text in group.VisibleTexts)
@@ -42,16 +51,16 @@ public sealed partial class ActionNameExtractor : IActionNameExtractor
             return normalAttack.ActionType;
         }
 
+        if (_magicLogClassifier.HasActivation(group))
+        {
+            return ActionType.Magic;
+        }
+
         foreach (var text in group.VisibleTexts)
         {
             if (SkillRegex().IsMatch(text))
             {
                 return ActionType.Skill;
-            }
-
-            if (MagicRegex().IsMatch(text))
-            {
-                return ActionType.Magic;
             }
         }
 
@@ -66,19 +75,7 @@ public sealed partial class ActionNameExtractor : IActionNameExtractor
         }
 
         var skill = SkillRegex().Match(text);
-        if (skill.Success)
-        {
-            return skill.Groups["action"].Value;
-        }
-
-        var magic = MagicRegex().Match(text);
-        if (magic.Success)
-        {
-            return magic.Groups["action"].Value;
-        }
-
-        var activated = ActivatedRegex().Match(text);
-        return activated.Success ? activated.Groups["action"].Value : null;
+        return skill.Success ? skill.Groups["action"].Value : null;
     }
 
     [GeneratedRegex(@"^.+?の攻撃")]
@@ -86,10 +83,4 @@ public sealed partial class ActionNameExtractor : IActionNameExtractor
 
     [GeneratedRegex(@"^.+?は、(?<action>.+?)を実行")]
     private static partial Regex SkillRegex();
-
-    [GeneratedRegex(@"^.+?は、(?<action>.+?)を唱えた")]
-    private static partial Regex MagicRegex();
-
-    [GeneratedRegex(@"^.+?の(?<action>.+?)が発動")]
-    private static partial Regex ActivatedRegex();
 }

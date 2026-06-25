@@ -29,7 +29,6 @@ public sealed class CanonicalRecordFactory
             EventGroup = rawRecord.EventGroup,
             SequenceHintMin = rawRecord.SequenceHint,
             SequenceHintMax = rawRecord.SequenceHint,
-            TemplateHint = rawRecord.TemplateHint,
             VisibleText = rawRecord.VisibleText,
             MessageTimeText = rawRecord.MessageTimeText,
             MessageTimePrecision = rawRecord.MessageTimePrecision,
@@ -46,7 +45,6 @@ public sealed class CanonicalRecordFactory
         return HashUtil.ComputeSha1(
             string.Concat(
                 rawRecord.EventGroup,
-                rawRecord.TemplateHint,
                 rawRecord.VisibleText));
     }
 }

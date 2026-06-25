@@ -62,7 +62,7 @@ public class ActionGroupParserTests
         Assert.Equal("Xitra", result.Parsed!.Actor);
         Assert.Equal("ファイア", result.Parsed.ActionName);
         Assert.Equal(ActionType.Magic, result.Parsed.ActionType);
-        Assert.Equal(HitStatus.Miss, result.Parsed.HitStatus);
+        Assert.Equal(HitStatus.Excluded, result.Parsed.HitStatus);
     }
 
     [Fact]
@@ -147,6 +147,63 @@ public class ActionGroupParserTests
         Assert.Equal("Xitra", result.Parsed!.Actor);
         Assert.Equal(ActionType.NormalAttack, result.Parsed.ActionType);
         Assert.Equal(HitStatus.Miss, result.Parsed.HitStatus);
+    }
+
+    [Fact]
+    public void ParseGroup_CastStartIsExcluded()
+    {
+        var result = Parse("Xitraは、Gurfurlur the Menacingにファイアを唱えた。");
+
+        Assert.True(result.IsParsed);
+        Assert.Equal("Xitra", result.Parsed!.Actor);
+        Assert.Equal("ファイア", result.Parsed.ActionName);
+        Assert.Equal(ActionType.Magic, result.Parsed.ActionType);
+        Assert.Equal(HitStatus.Excluded, result.Parsed.HitStatus);
+    }
+
+    [Fact]
+    public void ParseGroup_MagicDamageActivationCanBeParsed()
+    {
+        var result = Parse(
+            "Xitraのファイアが発動。",
+            "→Gurfurlur the Menacingに、123ダメージ。");
+
+        Assert.True(result.IsParsed);
+        Assert.Equal("Xitra", result.Parsed!.Actor);
+        Assert.Equal("ファイア", result.Parsed.ActionName);
+        Assert.Equal(ActionType.Magic, result.Parsed.ActionType);
+        Assert.Equal(123, result.Parsed.Damage.Damage);
+        Assert.Equal(HitStatus.Hit, result.Parsed.HitStatus);
+    }
+
+    [Fact]
+    public void ParseGroup_MagicEffectActivationCanBeParsed()
+    {
+        var result = Parse(
+            "Xitraのプロテスが発動。",
+            "→Xitraは、プロテスの効果。");
+
+        Assert.True(result.IsParsed);
+        Assert.Equal("Xitra", result.Parsed!.Actor);
+        Assert.Equal("プロテス", result.Parsed.ActionName);
+        Assert.Equal(ActionType.Magic, result.Parsed.ActionType);
+        Assert.False(result.Parsed.Damage.HasDamage);
+        Assert.Equal(HitStatus.Hit, result.Parsed.HitStatus);
+    }
+
+    [Fact]
+    public void ParseGroup_MagicStatusActivationCanBeParsed()
+    {
+        var result = Parse(
+            "Xitraのスリプルが発動。",
+            "→Gurfurlur the Menacingは、睡眠の状態になった！");
+
+        Assert.True(result.IsParsed);
+        Assert.Equal("Xitra", result.Parsed!.Actor);
+        Assert.Equal("スリプル", result.Parsed.ActionName);
+        Assert.Equal(ActionType.Magic, result.Parsed.ActionType);
+        Assert.False(result.Parsed.Damage.HasDamage);
+        Assert.Equal(HitStatus.Hit, result.Parsed.HitStatus);
     }
 
     private static ActionGroupParseResult Parse(params string[] visibleTexts)

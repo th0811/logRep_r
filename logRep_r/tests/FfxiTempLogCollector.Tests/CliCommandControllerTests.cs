@@ -65,6 +65,52 @@ public sealed class CliCommandControllerTests
     }
 
     [Fact]
+    public async Task ConfigPath未指定なら実行ディレクトリ直下を表示する()
+    {
+        using var temporaryDirectory = new TemporaryDirectory();
+        var output = new StringWriter();
+        await using var controller = CreateController(
+            temporaryDirectory,
+            output,
+            new StringWriter());
+
+        var exitCode = await controller.ExecuteAsync(
+            new CliCommand { Kind = CliCommandKind.ConfigPath });
+
+        Assert.Equal(CliExitCode.Success, exitCode);
+        Assert.Contains(
+            temporaryDirectory.GetPath(
+                Path.Combine("application", "config.json")),
+            output.ToString());
+    }
+
+    [Fact]
+    public async Task ConfigSet未指定なら実行ディレクトリ直下へ保存する()
+    {
+        using var temporaryDirectory = new TemporaryDirectory();
+        await using var controller = CreateController(
+            temporaryDirectory,
+            new StringWriter(),
+            new StringWriter());
+
+        var exitCode = await controller.ExecuteAsync(
+            new CliCommand
+            {
+                Kind = CliCommandKind.ConfigSet,
+                ConfigKey = "polling_interval_ms",
+                ConfigValue = "500",
+            });
+        var configPath = temporaryDirectory.GetPath(
+            Path.Combine("application", "config.json"));
+
+        Assert.Equal(CliExitCode.Success, exitCode);
+        Assert.True(File.Exists(configPath));
+        Assert.Contains(
+            "\"output_dir\": \"sessions\"",
+            File.ReadAllText(configPath));
+    }
+
+    [Fact]
     public async Task OnceでCompletedセッションを作成する()
     {
         using var temporaryDirectory = new TemporaryDirectory();
@@ -197,11 +243,12 @@ public sealed class CliCommandControllerTests
         TextWriter error,
         NamedPipeCommandClient? ipcClient = null)
     {
-        var store = new ConfigStore(
-            temporaryDirectory.GetPath("appdata"));
+        var applicationDirectory =
+            temporaryDirectory.GetPath("application");
+        var store = new ConfigStore(applicationDirectory);
         var loader = new ConfigLoader(
             store,
-            temporaryDirectory.GetPath("application"));
+            applicationDirectory);
 
         return new CliCommandController(
             store,

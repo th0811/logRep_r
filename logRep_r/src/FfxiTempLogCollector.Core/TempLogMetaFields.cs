@@ -8,5 +8,9 @@ public sealed class TempLogMetaFields
 
     public string? SequenceHint { get; init; }
 
-    public string? TemplateHint { get; init; }
+    public string? MessageTokenCount { get; init; }
+
+    public string? ColorCode { get; init; }
+
+    public string? MessageUnixTimeHint { get; init; }
 }

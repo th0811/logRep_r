@@ -24,19 +24,30 @@ public sealed class ConfigLoaderTests
     }
 
     [Fact]
+    public void 相対出力先を実行ディレクトリ基準で展開できる()
+    {
+        using var temporaryDirectory = new TemporaryDirectory();
+        var applicationDirectory = temporaryDirectory.GetPath("application");
+
+        var actual = ConfigLoader.ResolveOutputDirectory(
+            "sessions",
+            applicationDirectory);
+
+        Assert.Equal(
+            Path.Combine(applicationDirectory, "sessions"),
+            actual);
+    }
+
+    [Fact]
     public void 明示パスを最優先で読み込める()
     {
         using var temporaryDirectory = new TemporaryDirectory();
         var applicationDirectory = temporaryDirectory.GetPath("application");
-        var appDataDirectory = temporaryDirectory.GetPath("appdata");
         var explicitPath = temporaryDirectory.GetPath("explicit.json");
         Directory.CreateDirectory(applicationDirectory);
 
-        var store = new ConfigStore(appDataDirectory);
-        store.Save(
-            new CollectorConfig { LogLevel = "debug" },
-            Path.Combine(applicationDirectory, ConfigStore.ConfigFileName));
-        store.Save(new CollectorConfig { LogLevel = "warning" });
+        var store = new ConfigStore(applicationDirectory);
+        store.Save(new CollectorConfig { LogLevel = "debug" });
         store.Save(new CollectorConfig { LogLevel = "error" }, explicitPath);
 
         var loader = new ConfigLoader(store, applicationDirectory);
@@ -46,18 +57,14 @@ public sealed class ConfigLoaderTests
     }
 
     [Fact]
-    public void 実行ディレクトリをAppDataより優先して読み込める()
+    public void 実行ディレクトリの設定を読み込める()
     {
         using var temporaryDirectory = new TemporaryDirectory();
         var applicationDirectory = temporaryDirectory.GetPath("application");
-        var appDataDirectory = temporaryDirectory.GetPath("appdata");
         Directory.CreateDirectory(applicationDirectory);
 
-        var store = new ConfigStore(appDataDirectory);
-        store.Save(
-            new CollectorConfig { LogLevel = "debug" },
-            Path.Combine(applicationDirectory, ConfigStore.ConfigFileName));
-        store.Save(new CollectorConfig { LogLevel = "warning" });
+        var store = new ConfigStore(applicationDirectory);
+        store.Save(new CollectorConfig { LogLevel = "debug" });
 
         var loader = new ConfigLoader(store, applicationDirectory);
         var actual = loader.Load();
@@ -66,47 +73,19 @@ public sealed class ConfigLoaderTests
     }
 
     [Fact]
-    public void 実行ディレクトリになければAppDataから読み込める()
-    {
-        using var temporaryDirectory = new TemporaryDirectory();
-        var applicationDirectory = temporaryDirectory.GetPath("application");
-        var store = new ConfigStore(temporaryDirectory.GetPath("appdata"));
-        store.Save(new CollectorConfig { LogLevel = "warning" });
-
-        var loader = new ConfigLoader(store, applicationDirectory);
-        var actual = loader.Load();
-
-        Assert.Equal("warning", actual.LogLevel);
-    }
-
-    [Fact]
-    public void 新設定がなければ旧AppData設定を読み込める()
-    {
-        using var temporaryDirectory = new TemporaryDirectory();
-        var applicationDirectory = temporaryDirectory.GetPath("application");
-        var store = new ConfigStore(temporaryDirectory.GetPath("appdata"));
-        store.Save(
-            new CollectorConfig { LogLevel = "warning" },
-            store.LegacyDefaultPath);
-
-        var loader = new ConfigLoader(store, applicationDirectory);
-
-        Assert.Equal(store.LegacyDefaultPath, loader.ResolvePath());
-        Assert.Equal("warning", loader.Load().LogLevel);
-    }
-
-    [Fact]
     public void 設定ファイルがなければ展開済みデフォルト設定を返す()
     {
         using var temporaryDirectory = new TemporaryDirectory();
-        var store = new ConfigStore(temporaryDirectory.GetPath("appdata"));
-        var loader = new ConfigLoader(
-            store,
-            temporaryDirectory.GetPath("application"));
+        var applicationDirectory = temporaryDirectory.GetPath("application");
+        var store = new ConfigStore(applicationDirectory);
+        var loader = new ConfigLoader(store, applicationDirectory);
 
         var actual = loader.Load();
 
         Assert.DoesNotContain("%USERPROFILE%", actual.OutputDir);
+        Assert.Equal(
+            Path.Combine(applicationDirectory, "sessions"),
+            actual.OutputDir);
         Assert.Equal("cp932", actual.Encoding);
     }
 }

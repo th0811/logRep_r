@@ -34,7 +34,9 @@ public sealed class RawRecord
 
     public string? SequenceHint { get; init; }
 
-    public string? TemplateHint { get; init; }
+    public string? MessageTokenCount { get; init; }
+
+    public RawRecordDisplay? Display { get; init; }
 
     public string RawMessageHex { get; init; } = string.Empty;
 
@@ -44,6 +46,10 @@ public sealed class RawRecord
 
     public string? MessageTimePrecision { get; init; }
 
+    public long? MessageUnixTimeHint { get; init; }
+
+    public DateTimeOffset? MessageTimeAt { get; init; }
+
     public bool IsMarker { get; init; }
 
     public string? MarkerKeyword { get; init; }
@@ -51,4 +57,9 @@ public sealed class RawRecord
     public ParseStatus ParseStatus { get; init; }
 
     public string? ParseError { get; init; }
+}
+
+public sealed class RawRecordDisplay
+{
+    public string ColorCode { get; init; } = string.Empty;
 }

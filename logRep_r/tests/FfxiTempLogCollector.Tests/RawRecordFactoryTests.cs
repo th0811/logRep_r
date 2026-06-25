@@ -17,9 +17,11 @@ public sealed class RawRecordFactoryTests
             MetaFields = new TempLogMetaFields
             {
                 Fields = ["0", "1", "2", "3", "event", "12", "template"],
+                ColorCode = "3",
                 EventGroup = "event",
                 SequenceHint = "12",
-                TemplateHint = "template",
+                MessageTokenCount = "template",
+                MessageUnixTimeHint = "65A61380",
             },
             ParseStatus = ParseStatus.Success,
         };
@@ -78,11 +80,15 @@ public sealed class RawRecordFactoryTests
         Assert.Equal(120, actual.RecordOffset);
         Assert.Equal("event", actual.EventGroup);
         Assert.Equal("12", actual.SequenceHint);
-        Assert.Equal("template", actual.TemplateHint);
+        Assert.Equal("template", actual.MessageTokenCount);
+        Assert.NotNull(actual.Display);
+        Assert.Equal("3", actual.Display.ColorCode);
         Assert.Equal("82A000", actual.RawMessageHex);
         Assert.Equal("[21:30] #test", actual.VisibleText);
         Assert.Equal("21:30", actual.MessageTimeText);
         Assert.Equal("minute", actual.MessageTimePrecision);
+        Assert.Equal(0x65A61380, actual.MessageUnixTimeHint);
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(0x65A61380), actual.MessageTimeAt);
         Assert.True(actual.IsMarker);
         Assert.Equal("test", actual.MarkerKeyword);
         Assert.Equal(40, actual.RawRecordId.Length);

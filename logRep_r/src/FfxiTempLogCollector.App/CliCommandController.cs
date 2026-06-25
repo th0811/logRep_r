@@ -333,15 +333,13 @@ public sealed class CliCommandController : IAsyncDisposable
                 ConfigLoader.ExpandPath(explicitPath));
         }
 
-        return _configLoader.ResolvePath()
-            ?? _configStore.DefaultPath;
+        return _configStore.DefaultPath;
     }
 
     private static CollectorConfig CreateDefaultConfig()
     {
         var config = new CollectorConfig();
         config.TempDir = ConfigLoader.ExpandPath(config.TempDir);
-        config.OutputDir = ConfigLoader.ExpandPath(config.OutputDir);
         return config;
     }
 

@@ -1,6 +1,6 @@
 {
   "temp_dir": "",
-  "output_dir": "%USERPROFILE%\\Documents\\FFXI_LogRep_r\\sessions",
+  "output_dir": "sessions",
   "encoding": "cp932",
   "polling_interval_ms": 1000,
   "watch_window1": true,
@@ -11,7 +11,7 @@
   "dedupe_raw": true,
   "dedupe_canonical": true,
   "marker_detection": true,
-  "marker_prefix": "#",
+  "marker_prefix": "###",
   "timezone": "Asia/Tokyo",
   "flush_interval_ms": 1000,
   "hash_algorithm": "sha1",

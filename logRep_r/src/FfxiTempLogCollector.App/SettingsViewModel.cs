@@ -18,6 +18,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private string _pollingIntervalText;
     private bool _watchWindow1;
     private bool _watchWindow2;
+    private string _markerPrefix;
     private bool _rawOutput;
     private bool _canonicalOutput;
     private bool _autoStartCollectionOnLaunch;
@@ -51,6 +52,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             editable.PollingIntervalMs.ToString();
         _watchWindow1 = editable.WatchWindow1;
         _watchWindow2 = editable.WatchWindow2;
+        _markerPrefix = editable.MarkerPrefix;
         _rawOutput = editable.RawOutput;
         _canonicalOutput = editable.CanonicalOutput;
         _autoStartCollectionOnLaunch =
@@ -120,6 +122,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     {
         get => _watchWindow2;
         set => SetProperty(ref _watchWindow2, value);
+    }
+
+    public string MarkerPrefix
+    {
+        get => _markerPrefix;
+        set => SetProperty(ref _markerPrefix, value);
     }
 
     public bool RawOutput
@@ -224,6 +232,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         edited.PollingIntervalMs = pollingInterval;
         edited.WatchWindow1 = WatchWindow1;
         edited.WatchWindow2 = WatchWindow2;
+        edited.MarkerPrefix = (MarkerPrefix ?? string.Empty).Trim();
         edited.RawOutput = RawOutput;
         edited.CanonicalOutput = CanonicalOutput;
         edited.AutoStartCollectionOnLaunch =

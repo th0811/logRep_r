@@ -42,4 +42,17 @@ public sealed class CanonicalRecordFactoryTests
 
         Assert.Equal(firstKey, secondKey);
     }
+
+    [Fact]
+    public void MessageTokenCountが違ってもKeyは一致する()
+    {
+        var factory = new CanonicalRecordFactory();
+        var first = RawRecordTestData.Create(messageTokenCount: "00000005");
+        var second = RawRecordTestData.Create(messageTokenCount: "00000006");
+
+        var firstKey = factory.CreateCanonicalKey(first);
+        var secondKey = factory.CreateCanonicalKey(second);
+
+        Assert.Equal(firstKey, secondKey);
+    }
 }

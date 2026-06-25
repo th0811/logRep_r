@@ -33,13 +33,12 @@ public static class Program
         var application = new App();
         var configStore = new ConfigStore();
         var configLoader = new ConfigLoader(configStore);
-        var configPath = configLoader.ResolvePath();
         var config = configLoader.Load();
         var collectorService = new CollectorService();
         var configEditService = new ConfigEditService(
             configStore,
             collectorService,
-            configPath);
+            configStore.DefaultPath);
         var controller = new GuiCommandController(
             collectorService,
             config,

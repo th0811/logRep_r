@@ -11,7 +11,7 @@ public sealed class TempLogFileParser
 
     public const int MetaFieldCount = 21;
 
-    public const int MinimumMetaFieldCount = 5;
+    public const int MinimumMetaFieldCount = MetaFieldCount;
 
     public TempLogParsedFile Parse(byte[] fileBytes)
     {
@@ -173,15 +173,6 @@ public sealed class TempLogFileParser
                     index - fieldStart));
             fieldStart = index + 1;
 
-            if (fields.Count >= MinimumMetaFieldCount
-                && fieldStart < rawRecordBytes.Length
-                && LooksLikeMessageStart(rawRecordBytes[fieldStart]))
-            {
-                metaFields = CreateMetaFields(fields);
-                rawMessageBytes = rawRecordBytes[fieldStart..];
-                return true;
-            }
-
             if (fields.Count == MetaFieldCount)
             {
                 metaFields = CreateMetaFields(fields);
@@ -195,20 +186,17 @@ public sealed class TempLogFileParser
         return false;
     }
 
-    private static bool LooksLikeMessageStart(byte value)
-    {
-        return value < 0x20 || value >= 0x80;
-    }
-
     private static TempLogMetaFields CreateMetaFields(
         IReadOnlyList<string> fields)
     {
         return new TempLogMetaFields
         {
             Fields = fields,
+            ColorCode = GetFieldOrNull(fields, 3),
             EventGroup = GetFieldOrNull(fields, 4),
             SequenceHint = GetFieldOrNull(fields, 5),
-            TemplateHint = GetFieldOrNull(fields, 6),
+            MessageTokenCount = GetFieldOrNull(fields, 6),
+            MessageUnixTimeHint = GetFieldOrNull(fields, 19),
         };
     }
 

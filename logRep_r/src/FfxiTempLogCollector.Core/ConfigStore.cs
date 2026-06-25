@@ -4,29 +4,15 @@ public sealed class ConfigStore
 {
     public const string ConfigFileName = "config.json";
 
-    public const string ApplicationDirectoryName = "FFXI_LogRep_r";
-
-    public const string LegacyApplicationDirectoryName =
-        "FfxiTempLogCollector";
-
-    public ConfigStore(string? appDataDirectory = null)
+    public ConfigStore(string? applicationDirectory = null)
     {
-        var baseDirectory = appDataDirectory
-            ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var baseDirectory = Path.GetFullPath(
+            applicationDirectory ?? AppContext.BaseDirectory);
 
-        DefaultPath = Path.Combine(
-            baseDirectory,
-            ApplicationDirectoryName,
-            ConfigFileName);
-        LegacyDefaultPath = Path.Combine(
-            baseDirectory,
-            LegacyApplicationDirectoryName,
-            ConfigFileName);
+        DefaultPath = Path.Combine(baseDirectory, ConfigFileName);
     }
 
     public string DefaultPath { get; }
-
-    public string LegacyDefaultPath { get; }
 
     public CollectorConfig Load(string? path = null)
     {

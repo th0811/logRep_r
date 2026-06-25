@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FFXI_LogAnalyzer.App"
         mc:Ignorable="d"
-        Title="FFXI_LogAnalyzer" Height="620" Width="960" MinHeight="520" MinWidth="760">
+        Title="FFXI_LogAnalyzer" Height="900" Width="1600" MinHeight="520" MinWidth="760">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <Style TargetType="Button">

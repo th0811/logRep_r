@@ -21,6 +21,7 @@ public sealed class JsonlWriterOptions
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = false,
         };
         options.Converters.Add(

@@ -23,7 +23,8 @@ const BASE_COLUMNS = [
   ...META_COLUMNS,
   "event_group",
   "sequence_hint",
-  "template_hint",
+  "message_token_count",
+  "display.color_code",
   "raw_message_hex",
   "visible_text",
   "message_time_text",
@@ -43,6 +44,7 @@ const state = {
   page: 0,
   pageSize: 250,
   selected: null,
+  sourceFileName: "",
 };
 
 const elements = {
@@ -56,6 +58,7 @@ const elements = {
   statusText: document.getElementById("statusText"),
   copyStatusText: document.getElementById("copyStatusText"),
   copySelectedButton: document.getElementById("copySelectedButton"),
+  exportCsvButton: document.getElementById("exportCsvButton"),
   clearButton: document.getElementById("clearButton"),
   tableHead: document.getElementById("tableHead"),
   tableBody: document.getElementById("tableBody"),
@@ -117,6 +120,10 @@ elements.copySelectedButton.addEventListener("click", () => {
   void copySelectedCells();
 });
 
+elements.exportCsvButton.addEventListener("click", () => {
+  exportCsv();
+});
+
 elements.clearButton.addEventListener("click", () => {
   clearAll();
 });
@@ -143,9 +150,11 @@ async function loadFile(file) {
     state.globalFilter = "";
     state.page = 0;
     state.selected = null;
+    state.sourceFileName = file.name;
     elements.globalFilterInput.value = "";
     elements.clearButton.disabled = false;
     elements.copySelectedButton.disabled = true;
+    elements.exportCsvButton.disabled = result.records.length === 0;
 
     renderTableHead();
     applyFiltersAndRender();
@@ -188,6 +197,13 @@ function flattenRecord(source, lineNumber) {
 
   for (const [key, value] of Object.entries(source)) {
     if (key === "meta_fields") {
+      continue;
+    }
+
+    if (key === "display" && value && typeof value === "object" && !Array.isArray(value)) {
+      for (const [displayKey, displayValue] of Object.entries(value)) {
+        record[`display.${displayKey}`] = stringifyValue(`display.${displayKey}`, displayValue);
+      }
       continue;
     }
 
@@ -498,6 +514,58 @@ function toTsvCell(value) {
   return String(value).replace(/\r?\n/g, " ");
 }
 
+function exportCsv() {
+  if (!state.records.length) {
+    setCopyStatus("CSV出力対象のデータがありません");
+    return;
+  }
+
+  const csv = buildCsv();
+  const blob = new Blob([`\uFEFF${csv}`], {
+    type: "text/csv;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = buildCsvFileName();
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  setCopyStatus(`${state.filteredIndexes.length} 件をCSV出力しました`);
+}
+
+function buildCsv() {
+  const lines = [
+    state.columns.map(toCsvCell).join(","),
+  ];
+
+  for (const recordIndex of state.filteredIndexes) {
+    const record = state.records[recordIndex];
+    const values = state.columns.map((column) => toCsvCell(record[column] ?? ""));
+    lines.push(values.join(","));
+  }
+
+  return lines.join("\r\n");
+}
+
+function toCsvCell(value) {
+  const text = String(value);
+  if (/[",\r\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
+}
+
+function buildCsvFileName() {
+  const baseName = state.sourceFileName
+    ? state.sourceFileName.replace(/\.[^.]*$/, "")
+    : "raw_records";
+  const safeBaseName = baseName.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_");
+  return `${safeBaseName}_table.csv`;
+}
+
 function updatePager(total) {
   const lastPage = getLastPage();
   elements.prevPageButton.disabled = state.page <= 0;
@@ -519,12 +587,14 @@ function clearAll() {
   state.globalFilter = "";
   state.page = 0;
   state.selected = null;
+  state.sourceFileName = "";
   elements.fileInput.value = "";
   elements.globalFilterInput.value = "";
   elements.tableHead.textContent = "";
   elements.tableBody.textContent = "";
   elements.clearButton.disabled = true;
   elements.copySelectedButton.disabled = true;
+  elements.exportCsvButton.disabled = true;
   updatePager(0);
   setStatus("ファイル未読込");
   setCopyStatus("");

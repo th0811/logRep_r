@@ -27,8 +27,6 @@ public sealed class CanonicalRecord
 
     public string? SequenceHintMax { get; set; }
 
-    public string? TemplateHint { get; init; }
-
     public string VisibleText { get; init; } = string.Empty;
 
     public string? MessageTimeText { get; init; }
