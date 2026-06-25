@@ -2,10 +2,13 @@ namespace FfxiTempLogCollector.Core;
 
 public sealed class CollectorConfig
 {
+    public const string DefaultMarkerPrefix = "###";
+
+    public const string DefaultOutputDirectory = "sessions";
+
     public string TempDir { get; set; } = string.Empty;
 
-    public string OutputDir { get; set; } =
-        @"%USERPROFILE%\Documents\FFXI_LogRep_r\sessions";
+    public string OutputDir { get; set; } = DefaultOutputDirectory;
 
     public string Encoding { get; set; } = "cp932";
 
@@ -27,7 +30,7 @@ public sealed class CollectorConfig
 
     public bool MarkerDetection { get; set; } = true;
 
-    public string MarkerPrefix { get; set; } = "#";
+    public string MarkerPrefix { get; set; } = DefaultMarkerPrefix;
 
     public string Timezone { get; set; } = "Asia/Tokyo";
 

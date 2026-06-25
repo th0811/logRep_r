@@ -165,13 +165,13 @@ FFXI_LogRep_r.exe config get log_level --config "D:\FFXILogs\config.json"
 
 ## config.json
 
-設定はJSON形式で保存されます。設定ファイルの検索優先順位は次のとおりです。
+設定はJSON形式で保存されます。通常はexeと同じフォルダーの`config.json`へ保存されます。
+検索優先順位は次のとおりです。
 
 1. CLIの`--config`で指定したパス
 2. exeと同じフォルダーの`config.json`
-3. `%APPDATA%\FFXI_LogRep_r\config.json`
 
-旧バージョンの`%APPDATA%\FfxiTempLogCollector\config.json`も互換性のため読み込まれます。
+未指定で設定を保存する場合も、exeと同じフォルダーの`config.json`へ保存されます。
 
 同梱の`config.example.json`に全設定項目の例があります。手動設定する場合はコピーして`config.json`へ名前を変更してください。通常はGUI設定画面または`config set`を使用してください。
 
@@ -180,7 +180,7 @@ FFXI_LogRep_r.exe config get log_level --config "D:\FFXILogs\config.json"
 | 設定キー | 説明 |
 | --- | --- |
 | `temp_dir` | FFXIのTEMPフォルダー |
-| `output_dir` | セッション出力先 |
+| `output_dir` | セッション出力先。既定値 `sessions` はexeと同じフォルダー基準 |
 | `polling_interval_ms` | 監視間隔。250～5000ms |
 | `watch_window1`, `watch_window2` | ログウィンドウの監視有無 |
 | `raw_output`, `canonical_output` | 各JSONL出力の有無 |

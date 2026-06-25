@@ -67,7 +67,9 @@ public sealed class CollectorPipeline
             var timestamp = _timestampExtractor.Extract(
                 decodedMessage.VisibleText);
             var marker = config.MarkerDetection
-                ? _markerDetector.Detect(decodedMessage.VisibleText)
+                ? _markerDetector.Detect(
+                    decodedMessage.VisibleText,
+                    config.MarkerPrefix)
                 : null;
             var rawRecord = _rawRecordFactory.Create(
                 new RawRecordContext
@@ -104,6 +106,11 @@ public sealed class CollectorPipeline
             {
                 _rawWriter.Append(sessionDirectory, rawRecord);
                 stats.RawRecordsWritten++;
+            }
+
+            if (rawRecord.ParseStatus != ParseStatus.Success)
+            {
+                continue;
             }
 
             var canonicalCountBefore = canonicalDeduplicator.Records.Count;

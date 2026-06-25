@@ -7,6 +7,18 @@
              mc:Ignorable="d"
              d:DesignHeight="420"
              d:DesignWidth="900">
+    <UserControl.Resources>
+        <Style x:Key="CompactButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="MinWidth" Value="96" />
+        </Style>
+        <Style x:Key="FilterCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,0,12,4" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
+
     <DockPanel>
         <TextBlock DockPanel.Dock="Top"
                    Text="{Binding StatusMessage}"
@@ -15,31 +27,111 @@
 
         <TabControl>
             <TabItem Header="キャラクター別サマリ">
-                <DockPanel>
-                    <GroupBox DockPanel.Dock="Top"
-                              Header="actor表示"
-                              Margin="0,0,0,8"
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="360" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <GroupBox Grid.Column="0"
+                              Header="actor選択"
                               Padding="8">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                      VerticalScrollBarVisibility="Disabled">
-                            <ItemsControl ItemsSource="{Binding ActorVisibilities}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Top">
+                                <TextBox Text="{Binding ActorFilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         MinWidth="220"
+                                         Margin="0,0,0,8" />
+
+                                <WrapPanel Margin="0,0,0,4">
+                                    <CheckBox Style="{StaticResource FilterCheckBoxStyle}"
+                                              Content="PC登録"
+                                              IsChecked="{Binding ShowRegisteredPcActors, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <CheckBox Style="{StaticResource FilterCheckBoxStyle}"
+                                              Content="PC候補"
+                                              IsChecked="{Binding ShowPcCandidateActors, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <CheckBox Style="{StaticResource FilterCheckBoxStyle}"
+                                              Content="NPC登録"
+                                              IsChecked="{Binding ShowRegisteredNpcActors, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <CheckBox Style="{StaticResource FilterCheckBoxStyle}"
+                                              Content="未分類"
+                                              IsChecked="{Binding ShowUnknownActors, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </WrapPanel>
+
+                                <UniformGrid Columns="2"
+                                             Margin="0,0,0,8">
+                                    <Button Style="{StaticResource CompactButtonStyle}"
+                                            Content="すべて選択"
+                                            Command="{Binding SelectAllActorsCommand}" />
+                                    <Button Style="{StaticResource CompactButtonStyle}"
+                                            Content="すべて解除"
+                                            Command="{Binding ClearActorSelectionCommand}" />
+                                    <Button Style="{StaticResource CompactButtonStyle}"
+                                            Content="PC候補を選択"
+                                            Command="{Binding SelectPcCandidateActorsCommand}" />
+                                    <Button Style="{StaticResource CompactButtonStyle}"
+                                            Content="登録済みPCのみ"
+                                            Command="{Binding SelectRegisteredPcActorsCommand}" />
+                                </UniformGrid>
+
+                                <DockPanel Margin="0,0,0,8">
+                                    <Button DockPanel.Dock="Left"
+                                            Style="{StaticResource CompactButtonStyle}"
+                                            Content="登録名管理"
+                                            Command="{Binding OpenActorRegistrationManagerCommand}" />
+                                    <TextBlock Text="{Binding ActorSelectionSummary}"
+                                               VerticalAlignment="Center"
+                                               Margin="8,0,0,0" />
+                                </DockPanel>
+                            </StackPanel>
+
+                            <ListBox ItemsSource="{Binding FilteredActorVisibilities}"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <CheckBox Content="{Binding Actor}"
-                                                  IsChecked="{Binding IsVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                  Margin="0,0,16,4" />
+                                        <Border Padding="4"
+                                                BorderBrush="#E5E7EB"
+                                                BorderThickness="0,0,0,1">
+                                            <Border.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="PC名として登録"
+                                                              Command="{Binding PlacementTarget.DataContext.RegisterAsPcCommand,
+                                                                                RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                    <MenuItem Header="NPC名として登録"
+                                                              Command="{Binding PlacementTarget.DataContext.RegisterAsNpcCommand,
+                                                                                RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                    <MenuItem Header="登録を解除"
+                                                              Command="{Binding PlacementTarget.DataContext.ClearRegistrationCommand,
+                                                                                RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                </ContextMenu>
+                                            </Border.ContextMenu>
+
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <CheckBox Grid.Column="0"
+                                                          Content="{Binding Actor}"
+                                                          IsChecked="{Binding IsVisible, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                          VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding ClassificationLabel}"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center"
+                                                           Padding="8,2"
+                                                           Foreground="{Binding ClassificationForeground}"
+                                                           Background="{Binding ClassificationBackground}" />
+                                            </Grid>
+                                        </Border>
                                     </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
                     </GroupBox>
 
-                    <DataGrid ItemsSource="{Binding ActorSummaries}"
+                    <DataGrid Grid.Column="2"
+                              ItemsSource="{Binding ActorSummaries}"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False"
                               IsReadOnly="True"
@@ -49,15 +141,12 @@
                             <DataGridTextColumn Header="総与ダメージ" Binding="{Binding TotalDamage}" Width="110" />
                             <DataGridTextColumn Header="DPS" Binding="{Binding Dps}" Width="90" />
                             <DataGridTextColumn Header="DPS時間信頼度" Binding="{Binding DpsTimeConfidence}" Width="120" />
-                            <DataGridTextColumn Header="通常攻撃命中率" Binding="{Binding NormalAttackHitRate}" Width="120" />
-                            <DataGridTextColumn Header="通常攻撃クリティカル率" Binding="{Binding NormalAttackCriticalRate}" Width="150" />
-                            <DataGridTextColumn Header="総使用回数" Binding="{Binding TotalUseCount}" Width="100" />
-                            <DataGridTextColumn Header="総命中回数" Binding="{Binding TotalHitCount}" Width="100" />
-                            <DataGridTextColumn Header="総非命中回数" Binding="{Binding TotalMissCount}" Width="110" />
+                            <DataGridTextColumn Header="通常攻撃命中率" Binding="{Binding NormalAttackHitRate}" Width="150" />
+                            <DataGridTextColumn Header="通常攻撃クリティカル率" Binding="{Binding NormalAttackCriticalRate}" Width="170" />
                             <DataGridTextColumn Header="unknown件数" Binding="{Binding UnknownCount}" Width="100" />
                         </DataGrid.Columns>
                     </DataGrid>
-                </DockPanel>
+                </Grid>
             </TabItem>
 
             <TabItem Header="技/魔法/通常攻撃別集計">

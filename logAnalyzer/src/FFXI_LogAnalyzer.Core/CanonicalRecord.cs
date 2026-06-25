@@ -43,9 +43,6 @@ public sealed class CanonicalRecord
     [JsonConverter(typeof(FlexibleNullableLongJsonConverter))]
     public long? SequenceHintMax { get; init; }
 
-    [JsonPropertyName("template_hint")]
-    public string? TemplateHint { get; init; }
-
     [JsonPropertyName("visible_text")]
     public string? VisibleText { get; init; }
 

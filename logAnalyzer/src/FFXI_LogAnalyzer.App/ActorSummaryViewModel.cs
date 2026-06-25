@@ -10,8 +10,8 @@ public sealed class ActorSummaryViewModel
         TotalDamage = summary.TotalDamage.ToString("N0");
         Dps = FormatNullable(summary.Dps);
         DpsTimeConfidence = summary.DpsTimeConfidence.ToString();
-        NormalAttackHitRate = FormatRate(summary.NormalAttackHitRate);
-        NormalAttackCriticalRate = FormatRate(summary.NormalAttackCriticalRate);
+        NormalAttackHitRate = FormatNormalAttackHitRate(summary);
+        NormalAttackCriticalRate = FormatNormalAttackCriticalRate(summary);
         TotalUseCount = summary.TotalUseCount.ToString("N0");
         TotalHitCount = summary.TotalHitCount.ToString("N0");
         TotalMissCount = summary.TotalMissCount.ToString("N0");
@@ -38,9 +38,29 @@ public sealed class ActorSummaryViewModel
 
     public string UnknownCount { get; }
 
-    private static string FormatRate(double? rate)
+    private static string FormatNormalAttackHitRate(ActorSummary summary)
     {
-        return rate is null ? "-" : $"{rate:P1}";
+        var hitCount = summary.NormalAttackSummary.HitCount;
+        var useCount = hitCount + summary.NormalAttackSummary.MissCount;
+        return FormatRateWithCount(
+            summary.NormalAttackSummary.HitRate,
+            hitCount,
+            useCount);
+    }
+
+    private static string FormatNormalAttackCriticalRate(ActorSummary summary)
+    {
+        return FormatRateWithCount(
+            summary.NormalAttackSummary.CriticalRate,
+            summary.NormalAttackSummary.CriticalHitCount,
+            summary.NormalAttackSummary.HitCount);
+    }
+
+    private static string FormatRateWithCount(double? rate, int numerator, int denominator)
+    {
+        return rate is null
+            ? $"-({numerator:N0}/{denominator:N0})"
+            : $"{rate.Value * 100:0.#}％({numerator:N0}/{denominator:N0})";
     }
 
     private static string FormatNullable(double? value)

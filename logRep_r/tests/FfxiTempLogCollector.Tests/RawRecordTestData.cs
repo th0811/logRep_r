@@ -12,7 +12,7 @@ internal static class RawRecordTestData
         DateTimeOffset? firstSeenAt = null,
         string visibleText = "テストメッセージ",
         string? eventGroup = "event",
-        string? templateHint = "template")
+        string? messageTokenCount = "token-count")
     {
         return new RawRecord
         {
@@ -45,7 +45,7 @@ internal static class RawRecordTestData
             MetaFields = ["a", "b"],
             EventGroup = eventGroup,
             SequenceHint = sequenceHint,
-            TemplateHint = templateHint,
+            MessageTokenCount = messageTokenCount,
             RawMessageHex = "82A000",
             VisibleText = visibleText,
             MessageTimeText = "21:30",

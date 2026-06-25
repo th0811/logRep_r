@@ -85,6 +85,15 @@
                         <CheckBox Margin="0,0,0,10"
                                   IsChecked="{Binding WatchWindow2}"
                                   Content="ログウィンドウ2を監視する" />
+                        <DockPanel Margin="0,0,0,12">
+                            <TextBlock Width="220"
+                                       VerticalAlignment="Center"
+                                       Text="マーカー文字列" />
+                            <TextBox Width="160"
+                                     HorizontalAlignment="Left"
+                                     Text="{Binding MarkerPrefix,
+                                                    UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
                         <CheckBox Margin="0,0,0,10"
                                   IsChecked="{Binding RawOutput}"
                                   Content="raw出力を有効にする" />

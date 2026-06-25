@@ -1,14 +1,28 @@
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 namespace FfxiTempLogCollector.Core;
 
-public sealed partial class MarkerDetector
+public sealed class MarkerDetector
 {
+    private static readonly ConcurrentDictionary<string, Regex> RegexCache =
+        new(StringComparer.Ordinal);
+
     public DetectedMarker? Detect(string visibleText)
+    {
+        return Detect(visibleText, CollectorConfig.DefaultMarkerPrefix);
+    }
+
+    public DetectedMarker? Detect(string visibleText, string markerPrefix)
     {
         ArgumentNullException.ThrowIfNull(visibleText);
 
-        var match = MarkerRegex().Match(visibleText);
+        if (string.IsNullOrWhiteSpace(markerPrefix))
+        {
+            return null;
+        }
+
+        var match = CreateMarkerRegex(markerPrefix).Match(visibleText);
 
         if (!match.Success)
         {
@@ -21,8 +35,13 @@ public sealed partial class MarkerDetector
         };
     }
 
-    [GeneratedRegex(
-        @"#(?<keyword>[A-Za-z0-9_\-:.]+|[^\s　]+)",
-        RegexOptions.CultureInvariant)]
-    private static partial Regex MarkerRegex();
+    private static Regex CreateMarkerRegex(string markerPrefix)
+    {
+        return RegexCache.GetOrAdd(
+            markerPrefix,
+            static prefix => new Regex(
+                Regex.Escape(prefix)
+                + @"(?<keyword>[A-Za-z0-9_\-:.]+|[^\s\u3000]+)",
+                RegexOptions.CultureInvariant));
+    }
 }

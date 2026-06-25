@@ -9,7 +9,7 @@ public sealed class ConfigLoader
         ConfigStore? configStore = null,
         string? applicationDirectory = null)
     {
-        _configStore = configStore ?? new ConfigStore();
+        _configStore = configStore ?? new ConfigStore(applicationDirectory);
         _applicationDirectory = Path.GetFullPath(
             applicationDirectory ?? AppContext.BaseDirectory);
     }
@@ -42,13 +42,8 @@ public sealed class ConfigLoader
             return applicationConfigPath;
         }
 
-        if (File.Exists(_configStore.DefaultPath))
-        {
-            return _configStore.DefaultPath;
-        }
-
-        return File.Exists(_configStore.LegacyDefaultPath)
-            ? _configStore.LegacyDefaultPath
+        return File.Exists(_configStore.DefaultPath)
+            ? _configStore.DefaultPath
             : null;
     }
 
@@ -59,10 +54,27 @@ public sealed class ConfigLoader
         return Environment.ExpandEnvironmentVariables(path);
     }
 
-    private static CollectorConfig ExpandPaths(CollectorConfig config)
+    public static string ResolveOutputDirectory(
+        string outputDirectory,
+        string applicationDirectory)
+    {
+        ArgumentNullException.ThrowIfNull(outputDirectory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(applicationDirectory);
+
+        var expanded = ExpandPath(outputDirectory);
+
+        return Path.IsPathFullyQualified(expanded)
+            ? expanded
+            : Path.GetFullPath(
+                Path.Combine(applicationDirectory, expanded));
+    }
+
+    private CollectorConfig ExpandPaths(CollectorConfig config)
     {
         config.TempDir = ExpandPath(config.TempDir);
-        config.OutputDir = ExpandPath(config.OutputDir);
+        config.OutputDir = ResolveOutputDirectory(
+            config.OutputDir,
+            _applicationDirectory);
 
         return config;
     }

@@ -10,7 +10,7 @@ internal static class TempLogTestFileBuilder
         string message,
         string eventGroup = "event",
         string sequenceHint = "10",
-        string templateHint = "template")
+        string messageTokenCount = "token-count")
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var encoding = Encoding.GetEncoding(932);
@@ -19,7 +19,7 @@ internal static class TempLogTestFileBuilder
             .ToArray();
         fields[4] = eventGroup;
         fields[5] = sequenceHint;
-        fields[6] = templateHint;
+        fields[6] = messageTokenCount;
 
         var metaBytes = Encoding.ASCII.GetBytes(
             $"{string.Join(',', fields)},");

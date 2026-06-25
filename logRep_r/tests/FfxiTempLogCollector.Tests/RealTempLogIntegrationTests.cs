@@ -134,6 +134,6 @@ public sealed partial class RealTempLogIntegrationTests
     [GeneratedRegex(@"\[\d{2}:\d{2}(?::\d{2})?\]")]
     private static partial Regex TimestampRegex();
 
-    [GeneratedRegex(@"#\S+")]
+    [GeneratedRegex(@"###\S+")]
     private static partial Regex MarkerRegex();
 }

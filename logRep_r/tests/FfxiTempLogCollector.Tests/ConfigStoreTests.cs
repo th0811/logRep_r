@@ -10,9 +10,7 @@ public sealed class ConfigStoreTests
         var config = new CollectorConfig();
 
         Assert.Equal(string.Empty, config.TempDir);
-        Assert.Equal(
-            @"%USERPROFILE%\Documents\FFXI_LogRep_r\sessions",
-            config.OutputDir);
+        Assert.Equal("sessions", config.OutputDir);
         Assert.Equal("cp932", config.Encoding);
         Assert.Equal(1000, config.PollingIntervalMs);
         Assert.True(config.WatchWindow1);
@@ -23,7 +21,7 @@ public sealed class ConfigStoreTests
         Assert.True(config.DedupeRaw);
         Assert.True(config.DedupeCanonical);
         Assert.True(config.MarkerDetection);
-        Assert.Equal("#", config.MarkerPrefix);
+        Assert.Equal("###", config.MarkerPrefix);
         Assert.Equal("Asia/Tokyo", config.Timezone);
         Assert.Equal(1000, config.FlushIntervalMs);
         Assert.Equal("sha1", config.HashAlgorithm);
@@ -63,18 +61,15 @@ public sealed class ConfigStoreTests
     }
 
     [Fact]
-    public void 標準保存先はAppData配下になる()
+    public void 標準保存先は実行ディレクトリ直下になる()
     {
         using var temporaryDirectory = new TemporaryDirectory();
-        var store = new ConfigStore(temporaryDirectory.Path);
+        var applicationDirectory =
+            temporaryDirectory.GetPath("application");
+        var store = new ConfigStore(applicationDirectory);
 
         Assert.Equal(
-            temporaryDirectory.GetPath(
-                Path.Combine("FFXI_LogRep_r", "config.json")),
+            Path.Combine(applicationDirectory, "config.json"),
             store.DefaultPath);
-        Assert.Equal(
-            temporaryDirectory.GetPath(
-                Path.Combine("FfxiTempLogCollector", "config.json")),
-            store.LegacyDefaultPath);
     }
 }

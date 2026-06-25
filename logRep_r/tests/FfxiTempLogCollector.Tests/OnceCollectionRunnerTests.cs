@@ -24,7 +24,7 @@ public sealed class OnceCollectionRunnerTests
         Directory.CreateDirectory(tempDirectory);
         File.WriteAllBytes(
             Path.Combine(tempDirectory, "1_0.log"),
-            TempLogTestFileBuilder.Create("[21:30] #start:test"));
+            TempLogTestFileBuilder.Create("[21:30] ###start:test"));
         File.WriteAllBytes(
             Path.Combine(tempDirectory, "ignored.log"),
             TempLogTestFileBuilder.Create("対象外"));

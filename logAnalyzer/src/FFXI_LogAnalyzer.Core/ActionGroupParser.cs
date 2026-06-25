@@ -6,6 +6,7 @@ public sealed class ActionGroupParser : IActionParser
     private readonly IActionNameExtractor _actionNameExtractor;
     private readonly IDamageParser _damageParser;
     private readonly IHitStatusClassifier _hitStatusClassifier;
+    private readonly MagicLogClassifier _magicLogClassifier = new();
 
     public ActionGroupParser(AnalysisRuleSet ruleSet)
         : this(
@@ -36,6 +37,29 @@ public sealed class ActionGroupParser : IActionParser
 
     public ActionGroupParseResult ParseGroup(ActionGroup group)
     {
+        if (_magicLogClassifier.TryParseCastStart(
+                group,
+                out var castActor,
+                out var castActionName))
+        {
+            var excludedDamage = ParsedDamageResult.None;
+            var excludedAction = new ParsedAction(
+                castActor,
+                castActionName,
+                ActionType.Magic,
+                excludedDamage,
+                HitStatus.Excluded);
+
+            return ActionGroupParseResult.FromParsed(new ParsedActionGroup(
+                group,
+                castActor,
+                castActionName,
+                ActionType.Magic,
+                excludedDamage,
+                HitStatus.Excluded,
+                excludedAction));
+        }
+
         var actor = _actorExtractor.ExtractActor(group);
         var actionName = _actionNameExtractor.ExtractActionName(group);
         var actionType = ResolveActionType(group, _actionNameExtractor);

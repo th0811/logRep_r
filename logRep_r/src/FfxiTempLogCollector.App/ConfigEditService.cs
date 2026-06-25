@@ -29,10 +29,14 @@ public sealed class ConfigEditService
         ArgumentNullException.ThrowIfNull(edited);
 
         var normalized = Clone(edited);
+        var configDirectory = Path.GetDirectoryName(
+                Path.GetFullPath(_configPath ?? _configStore.DefaultPath))
+            ?? AppContext.BaseDirectory;
         normalized.TempDir = ConfigLoader.ExpandPath(
             normalized.TempDir);
-        normalized.OutputDir = ConfigLoader.ExpandPath(
-            normalized.OutputDir);
+        normalized.OutputDir = ConfigLoader.ResolveOutputDirectory(
+            normalized.OutputDir,
+            configDirectory);
         var validation = Validate(normalized);
 
         if (!validation.Success)
@@ -101,6 +105,15 @@ public sealed class ConfigEditService
             };
         }
 
+        if (config.MarkerDetection
+            && string.IsNullOrWhiteSpace(config.MarkerPrefix))
+        {
+            return new ConfigEditResult
+            {
+                Message = "マーカー文字列を指定してください。",
+            };
+        }
+
         try
         {
             Directory.CreateDirectory(
@@ -143,7 +156,11 @@ public sealed class ConfigEditService
             || current.WatchWindow1 != edited.WatchWindow1
             || current.WatchWindow2 != edited.WatchWindow2
             || current.RawOutput != edited.RawOutput
-            || current.CanonicalOutput != edited.CanonicalOutput;
+            || current.CanonicalOutput != edited.CanonicalOutput
+            || current.MarkerDetection != edited.MarkerDetection
+            || !StringComparer.Ordinal.Equals(
+                current.MarkerPrefix,
+                edited.MarkerPrefix);
     }
 
     public static CollectorConfig Clone(CollectorConfig source)

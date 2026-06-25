@@ -70,6 +70,23 @@ public sealed class ConfigEditServiceTests
     }
 
     [Fact]
+    public async Task マーカー文字列が空なら検証エラーにする()
+    {
+        using var temporaryDirectory = new TemporaryDirectory();
+        await using var collectorService = new CollectorService();
+        var service = new ConfigEditService(
+            new ConfigStore(temporaryDirectory.Path),
+            collectorService);
+        var config = CreateConfig(temporaryDirectory);
+        config.MarkerPrefix = string.Empty;
+
+        var result = service.Validate(config);
+
+        Assert.False(result.Success);
+        Assert.Contains("マーカー文字列", result.Message);
+    }
+
+    [Fact]
     public async Task 収集中の次回反映設定変更は説明を返す()
     {
         using var temporaryDirectory = new TemporaryDirectory();
