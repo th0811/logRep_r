@@ -18,6 +18,19 @@ public sealed class DialogService
             : null;
     }
 
+    public string? SelectSessionsRootFolder()
+    {
+        using var dialog = new FolderBrowserDialog
+        {
+            Description = "sessions フォルダを選択してください。",
+            UseDescriptionForTitle = true
+        };
+
+        return dialog.ShowDialog() == DialogResult.OK
+            ? dialog.SelectedPath
+            : null;
+    }
+
     public bool ConfirmWarnings(IReadOnlyList<string> warnings)
     {
         var message = string.Join(Environment.NewLine, warnings) +

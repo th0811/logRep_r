@@ -13,6 +13,7 @@ public sealed class AnalysisRangeViewModel : INotifyPropertyChanged
     private readonly ActionGroupBuilder _actionGroupBuilder = new();
     private readonly ActionGroupParser _actionGroupParser = new(new DefaultAnalysisRuleSet());
     private readonly AnalysisAggregator _analysisAggregator = new();
+    private readonly LevelingPointAggregator _levelingPointAggregator = new();
     private IReadOnlyList<CanonicalRecord> _records = [];
     private bool _isStartLogStart = true;
     private bool _isEndLogEnd = true;
@@ -276,7 +277,11 @@ public sealed class AnalysisRangeViewModel : INotifyPropertyChanged
             .Where(result => result.Unparsed is not null)
             .Select(result => result.Unparsed!)
             .ToArray();
-        var analysisResult = _analysisAggregator.Aggregate(parsed, time, unparsed);
+        var levelingPointSummaries = _levelingPointAggregator.Aggregate(range, time);
+        var analysisResult = _analysisAggregator.Aggregate(parsed, time, unparsed) with
+        {
+            LevelingPointSummaries = levelingPointSummaries
+        };
 
         RangeSummary = $"対象レコード: {range.Count} 件 / time_confidence: {time.Confidence} / duration_seconds: {ToDurationText(time.DurationSeconds)}";
         AnalysisCompleted?.Invoke(analysisResult);

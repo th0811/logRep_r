@@ -177,6 +177,21 @@ public class ActionGroupParserTests
     }
 
     [Fact]
+    public void ParseGroup_HpAbsorbDamageCanBeParsed()
+    {
+        var result = Parse(
+            "Xitraのドレインが発動。",
+            "→Nostos Maridから、2042HP吸収。");
+
+        Assert.True(result.IsParsed);
+        Assert.Equal("Xitra", result.Parsed!.Actor);
+        Assert.Equal("ドレイン", result.Parsed.ActionName);
+        Assert.Equal(ActionType.Magic, result.Parsed.ActionType);
+        Assert.Equal(2042, result.Parsed.Damage.Damage);
+        Assert.Equal(HitStatus.Hit, result.Parsed.HitStatus);
+    }
+
+    [Fact]
     public void ParseGroup_MagicEffectActivationCanBeParsed()
     {
         var result = Parse(

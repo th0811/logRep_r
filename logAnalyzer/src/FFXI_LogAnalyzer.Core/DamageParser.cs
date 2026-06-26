@@ -20,6 +20,6 @@ public sealed partial class DamageParser : IDamageParser
         return ParsedDamageResult.FromDamages(damages);
     }
 
-    [GeneratedRegex(@"(?:に、|は、)?(?<damage>\d+)ダメージ")]
+    [GeneratedRegex(@"(?:に、|は、)?(?<damage>\d+)(?:ダメージ|HP吸収)")]
     private static partial Regex DamageRegex();
 }

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using FFXI_LogAnalyzer.Core;
 
@@ -10,8 +11,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly SessionOpenService _sessionOpenService;
     private readonly DialogService _dialogService;
     private readonly CanonicalRecordReader _canonicalRecordReader = new();
-    private AnalyzerInputSession? _currentSession;
-    private string _statusMessage = "セッションフォルダを選択してください。";
+    private SessionSelectionViewModel? _selectedSession;
+    private string _statusMessage = "セッションフォルダを追加してください。";
     private string _selectedFolderPath = "未選択";
 
     public MainViewModel(SessionOpenService sessionOpenService, DialogService dialogService)
@@ -19,15 +20,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _sessionOpenService = sessionOpenService;
         _dialogService = dialogService;
         AnalysisRange.AnalysisCompleted += OnAnalysisCompleted;
-        OpenSessionCommand = new RelayCommand(OpenSession);
+        AddSessionCommand = new RelayCommand(AddSession);
+        AddSessionsFromFolderCommand = new RelayCommand(AddSessionsFromFolder);
+        RemoveSelectedSessionCommand = new RelayCommand(RemoveSelectedSession, () => SelectedSession is not null);
+        ClearSessionsCommand = new RelayCommand(ClearSessions, () => Sessions.Count > 0);
         ProceedToRangeSelectionCommand = new RelayCommand(ProceedToRangeSelection, () => HasSession);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public RelayCommand OpenSessionCommand { get; }
+    public RelayCommand AddSessionCommand { get; }
+
+    public RelayCommand AddSessionsFromFolderCommand { get; }
+
+    public RelayCommand RemoveSelectedSessionCommand { get; }
+
+    public RelayCommand ClearSessionsCommand { get; }
 
     public RelayCommand ProceedToRangeSelectionCommand { get; }
+
+    public ObservableCollection<SessionSelectionViewModel> Sessions { get; } = [];
 
     public ObservableCollection<SessionInfoRow> SessionInfoRows { get; } = [];
 
@@ -36,6 +48,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public AnalysisRangeViewModel AnalysisRange { get; } = new();
 
     public AnalysisResultViewModel AnalysisResult { get; } = new();
+
+    public SessionSelectionViewModel? SelectedSession
+    {
+        get => _selectedSession;
+        set
+        {
+            if (SetProperty(ref _selectedSession, value))
+            {
+                RemoveSelectedSessionCommand.RaiseCanExecuteChanged();
+            }
+        }
+    }
 
     public string StatusMessage
     {
@@ -49,53 +73,141 @@ public sealed class MainViewModel : INotifyPropertyChanged
         private set => SetProperty(ref _selectedFolderPath, value);
     }
 
-    public bool HasSession => _currentSession is not null;
+    public bool HasSession => Sessions.Any(session => session.IsEnabled);
 
-    private void OpenSession()
+    private void AddSession()
     {
         var folderPath = _dialogService.SelectSessionFolder();
         if (string.IsNullOrWhiteSpace(folderPath))
         {
-            StatusMessage = "セッションフォルダ選択をキャンセルしました。";
+            StatusMessage = "セッション追加をキャンセルしました。";
             return;
         }
 
-        StatusMessage = "セッションを読み込んでいます。";
-        SelectedFolderPath = folderPath;
+        AddSessionFromPath(folderPath, showError: true);
+        RefreshCombinedSession();
+    }
 
-        var result = _sessionOpenService.Open(folderPath);
+    private void AddSessionsFromFolder()
+    {
+        var folderPath = _dialogService.SelectSessionsRootFolder();
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            StatusMessage = "フォルダ内セッション追加をキャンセルしました。";
+            return;
+        }
+
+        var sessionFolders = Directory
+            .EnumerateDirectories(folderPath)
+            .Where(directory => File.Exists(Path.Combine(directory, "session.json")))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        if (sessionFolders.Length == 0)
+        {
+            StatusMessage = "追加可能なセッションフォルダが見つかりませんでした。";
+            return;
+        }
+
+        var added = 0;
+        foreach (var sessionFolder in sessionFolders)
+        {
+            if (AddSessionFromPath(sessionFolder, showError: false))
+            {
+                added++;
+            }
+        }
+
+        RefreshCombinedSession();
+        StatusMessage = $"{added:N0} 件のセッションを追加しました。";
+    }
+
+    private bool AddSessionFromPath(string folderPath, bool showError)
+    {
+        var normalizedFolderPath = Path.GetFullPath(folderPath);
+        if (Sessions.Any(session => string.Equals(
+                session.FolderPath,
+                normalizedFolderPath,
+                StringComparison.OrdinalIgnoreCase)))
+        {
+            StatusMessage = "選択済みのセッションはスキップしました。";
+            return false;
+        }
+
+        var result = _sessionOpenService.Open(normalizedFolderPath);
         if (!result.IsSuccess || result.Session is null)
         {
-            ClearSession();
-            var message = string.Join(Environment.NewLine, result.Errors);
+            if (showError)
+            {
+                _dialogService.ShowError(string.Join(Environment.NewLine, result.Errors));
+            }
+
+            AddWarning(normalizedFolderPath, result.Errors);
             StatusMessage = "セッションの読み込みに失敗しました。";
-            _dialogService.ShowError(message);
-            return;
+            return false;
         }
 
-        if (result.Warnings.Count > 0 && !_dialogService.ConfirmWarnings(result.Warnings))
+        if (result.Warnings.Count > 0
+            && showError
+            && !_dialogService.ConfirmWarnings(result.Warnings))
         {
-            ClearSession();
-            StatusMessage = "警告があるセッションの読み込みをキャンセルしました。";
-            return;
+            StatusMessage = "警告があるセッションの追加をキャンセルしました。";
+            return false;
         }
 
         var canonicalRecords = _canonicalRecordReader.Read(result.Session.CanonicalRecordsPath);
         if (!canonicalRecords.IsSuccess)
         {
-            ClearSession();
-            var message = string.Join(Environment.NewLine, canonicalRecords.Errors);
+            if (showError)
+            {
+                _dialogService.ShowError(string.Join(Environment.NewLine, canonicalRecords.Errors));
+            }
+
+            AddWarning(normalizedFolderPath, canonicalRecords.Errors);
             StatusMessage = "canonical_records.jsonl の読み込みに失敗しました。";
-            _dialogService.ShowError(message);
-            return;
+            return false;
         }
 
         var warnings = result.Warnings
-            .Concat(canonicalRecords.LineErrors.Select(error => $"canonical_records.jsonl {error.LineNumber}行目: {error.Message}"))
+            .Concat(canonicalRecords.LineErrors.Select(
+                error => $"canonical_records.jsonl {error.LineNumber}行目: {error.Message}"))
             .ToArray();
+        var session = new SessionSelectionViewModel(
+            result.Session,
+            canonicalRecords.Records,
+            warnings);
+        session.PropertyChanged += OnSessionSelectionChanged;
+        Sessions.Add(session);
+        SelectedSession = session;
+        StatusMessage = "セッションを追加しました。";
+        return true;
+    }
 
-        SetSession(result.Session, canonicalRecords.Records, warnings);
-        StatusMessage = "セッションを読み込みました。";
+    private void RemoveSelectedSession()
+    {
+        if (SelectedSession is null)
+        {
+            return;
+        }
+
+        SelectedSession.PropertyChanged -= OnSessionSelectionChanged;
+        Sessions.Remove(SelectedSession);
+        SelectedSession = Sessions.LastOrDefault();
+        RefreshCombinedSession();
+        StatusMessage = "選択中のセッションを解除しました。";
+    }
+
+    private void ClearSessions()
+    {
+        foreach (var session in Sessions)
+        {
+            session.PropertyChanged -= OnSessionSelectionChanged;
+        }
+
+        Sessions.Clear();
+        SelectedSession = null;
+        RefreshCombinedSession();
+        StatusMessage = "セッション選択をすべて解除しました。";
     }
 
     private void ProceedToRangeSelection()
@@ -103,39 +215,89 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _dialogService.ShowInformation("分析区間タブで開始・終了ポイントを選択してください。");
     }
 
-    private void SetSession(
-        AnalyzerInputSession session,
-        IReadOnlyList<CanonicalRecord> canonicalRecords,
-        IReadOnlyList<string> warnings)
+    private void RefreshCombinedSession()
     {
-        _currentSession = session;
-        SessionInfoRows.Clear();
-        foreach (var row in BuildSessionRows(session))
-        {
-            SessionInfoRows.Add(row);
-        }
+        var enabledSessions = Sessions
+            .Where(session => session.IsEnabled)
+            .ToArray();
 
+        SessionInfoRows.Clear();
         Warnings.Clear();
-        foreach (var warning in warnings)
+        foreach (var warning in enabledSessions.SelectMany(session => session.Warnings))
         {
             Warnings.Add(warning);
         }
 
-        AnalysisRange.LoadRecords(canonicalRecords);
+        if (enabledSessions.Length == 0)
+        {
+            AnalysisRange.Clear();
+            AnalysisResult.Clear();
+            SelectedFolderPath = "未選択";
+            RefreshCommandStates();
+            return;
+        }
+
+        foreach (var row in BuildSessionRows(enabledSessions))
+        {
+            SessionInfoRows.Add(row);
+        }
+
+        SelectedFolderPath = enabledSessions.Length == 1
+            ? enabledSessions[0].FolderPath
+            : $"{enabledSessions.Length:N0} 件のセッションを結合";
+
+        AnalysisRange.LoadRecords(BuildCombinedRecords(enabledSessions));
         AnalysisResult.Clear();
-        OnPropertyChanged(nameof(HasSession));
-        ProceedToRangeSelectionCommand.RaiseCanExecuteChanged();
+        RefreshCommandStates();
     }
 
-    private void ClearSession()
+    private static IReadOnlyList<CanonicalRecord> BuildCombinedRecords(
+        IReadOnlyList<SessionSelectionViewModel> enabledSessions)
     {
-        _currentSession = null;
-        SessionInfoRows.Clear();
-        Warnings.Clear();
-        AnalysisRange.Clear();
-        AnalysisResult.Clear();
-        OnPropertyChanged(nameof(HasSession));
-        ProceedToRangeSelectionCommand.RaiseCanExecuteChanged();
+        return enabledSessions
+            .SelectMany(session => session.Records)
+            .OrderBy(record => record.FirstSeenAt ?? DateTimeOffset.MaxValue)
+            .ThenBy(record => record.SessionId, StringComparer.Ordinal)
+            .ThenBy(record => record.Order ?? long.MaxValue)
+            .Select((record, index) => CloneWithCombinedOrder(record, index + 1))
+            .ToArray();
+    }
+
+    private static CanonicalRecord CloneWithCombinedOrder(
+        CanonicalRecord record,
+        long combinedOrder)
+    {
+        return new CanonicalRecord
+        {
+            SchemaVersion = record.SchemaVersion,
+            CanonicalRecordId = record.CanonicalRecordId,
+            SessionId = record.SessionId,
+            Order = combinedOrder,
+            FirstSeenAt = record.FirstSeenAt,
+            LastSeenAt = record.LastSeenAt,
+            SourceWindows = record.SourceWindows,
+            SourceFiles = record.SourceFiles,
+            SourceRawRecordIds = record.SourceRawRecordIds,
+            EventGroup = record.EventGroup,
+            SequenceHintMin = record.SequenceHintMin,
+            SequenceHintMax = record.SequenceHintMax,
+            VisibleText = record.VisibleText,
+            MessageTimeText = record.MessageTimeText,
+            MessageTimePrecision = record.MessageTimePrecision,
+            IsMarker = record.IsMarker,
+            MarkerKeyword = record.MarkerKeyword,
+            CanonicalKey = record.CanonicalKey
+        };
+    }
+
+    private void OnSessionSelectionChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SessionSelectionViewModel.IsEnabled))
+        {
+            RefreshCombinedSession();
+        }
     }
 
     private void OnAnalysisCompleted(AnalysisResult result)
@@ -144,7 +306,30 @@ public sealed class MainViewModel : INotifyPropertyChanged
         StatusMessage = "分析結果を表示しました。";
     }
 
-    private static IReadOnlyList<SessionInfoRow> BuildSessionRows(AnalyzerInputSession session)
+    private static IReadOnlyList<SessionInfoRow> BuildSessionRows(
+        IReadOnlyList<SessionSelectionViewModel> sessions)
+    {
+        if (sessions.Count == 1)
+        {
+            return BuildSingleSessionRows(sessions[0].Session);
+        }
+
+        return
+        [
+            new SessionInfoRow("selected_sessions", sessions.Count.ToString("N0")),
+            new SessionInfoRow("session_ids", string.Join(", ", sessions.Select(session => session.SessionId))),
+            new SessionInfoRow("started_at_min", ToDisplay(sessions.Min(session => session.Session.SessionInfo.StartedAt))),
+            new SessionInfoRow("ended_at_max", ToDisplay(sessions.Max(session => session.Session.SessionInfo.EndedAt))),
+            new SessionInfoRow("canonical record件数", sessions.Sum(session => session.Records.Count).ToString("N0")),
+            new SessionInfoRow("marker件数", sessions.Sum(session => session.Records.Count(record => record.IsMarker)).ToString("N0")),
+            new SessionInfoRow("gap_warnings", sessions.Sum(session => session.Session.StatsInfo.GapWarnings).ToString("N0")),
+            new SessionInfoRow("parse_errors", sessions.Sum(session => session.Session.StatsInfo.ParseErrors).ToString("N0")),
+            new SessionInfoRow("decode_errors", sessions.Sum(session => session.Session.StatsInfo.DecodeErrors).ToString("N0"))
+        ];
+    }
+
+    private static IReadOnlyList<SessionInfoRow> BuildSingleSessionRows(
+        AnalyzerInputSession session)
     {
         var info = session.SessionInfo;
         var stats = session.StatsInfo;
@@ -165,6 +350,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ];
     }
 
+    private void AddWarning(string source, IEnumerable<string> warnings)
+    {
+        foreach (var warning in warnings)
+        {
+            Warnings.Add($"{source}: {warning}");
+        }
+    }
+
+    private void RefreshCommandStates()
+    {
+        OnPropertyChanged(nameof(HasSession));
+        ProceedToRangeSelectionCommand.RaiseCanExecuteChanged();
+        RemoveSelectedSessionCommand.RaiseCanExecuteChanged();
+        ClearSessionsCommand.RaiseCanExecuteChanged();
+    }
+
     private static string ToDisplay(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? "-" : value;
@@ -175,19 +376,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return value?.ToString("yyyy-MM-dd HH:mm:ss zzz") ?? "-";
     }
 
-    private void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    private bool SetProperty<T>(
+        ref T field,
+        T value,
+        [CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals(field, value))
         {
-            return;
+            return false;
         }
 
         field = value;
         OnPropertyChanged(propertyName);
+        return true;
     }
 
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    private void OnPropertyChanged(
+        [CallerMemberName] string? propertyName = null)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        PropertyChanged?.Invoke(
+            this,
+            new PropertyChangedEventArgs(propertyName));
     }
 }

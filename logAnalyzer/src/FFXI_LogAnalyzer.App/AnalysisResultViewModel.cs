@@ -64,6 +64,8 @@ public sealed class AnalysisResultViewModel : INotifyPropertyChanged
 
     public ObservableCollection<ActionSummaryViewModel> ActionSummaries { get; } = [];
 
+    public ObservableCollection<LevelingPointSummaryViewModel> LevelingPointSummaries { get; } = [];
+
     public ObservableCollection<ActorVisibilityViewModel> ActorVisibilities { get; } = [];
 
     public ObservableCollection<ActorVisibilityViewModel> FilteredActorVisibilities { get; } = [];
@@ -180,6 +182,12 @@ public sealed class AnalysisResultViewModel : INotifyPropertyChanged
             result.ActionSummaries.Select(
                 summary => new ActionSummaryViewModel(summary)));
 
+        LevelingPointSummaries.Clear();
+        foreach (var summary in result.LevelingPointSummaries)
+        {
+            LevelingPointSummaries.Add(new LevelingPointSummaryViewModel(summary));
+        }
+
         ActorVisibilities.Clear();
         foreach (var summary in _allActorSummaries)
         {
@@ -231,6 +239,7 @@ public sealed class AnalysisResultViewModel : INotifyPropertyChanged
         _allActionSummaries.Clear();
         ActorSummaries.Clear();
         ActionSummaries.Clear();
+        LevelingPointSummaries.Clear();
         ActorVisibilities.Clear();
         FilteredActorVisibilities.Clear();
         UnparsedLogs.Clear();

@@ -31,6 +31,7 @@
                       IsReadOnly="True"
                       HeadersVisibility="Column">
                 <DataGrid.Columns>
+                    <DataGridTextColumn Header="session_id" Binding="{Binding SessionId}" Width="140" />
                     <DataGridTextColumn Header="order" Binding="{Binding Order}" Width="70" />
                     <DataGridTextColumn Header="marker_keyword" Binding="{Binding MarkerKeyword}" Width="140" />
                     <DataGridTextColumn Header="visible_text" Binding="{Binding VisibleText}" Width="*" />

@@ -9,6 +9,7 @@ public class DamageParserTests
     [InlineData("敵は、456ダメージを受けた。", 456)]
     [InlineData("789ダメージ。", 789)]
     [InlineData("→敵に、0ダメージ。", 0)]
+    [InlineData("→Nostos Maridから、2042HP吸収。", 2042)]
     public void ParseDamage_ExtractsDamageValue(string visibleText, int expectedDamage)
     {
         var damage = new DamageParser().ParseDamage(CreateGroup(visibleText));
