@@ -7,4 +7,6 @@ public sealed record AnalysisResult(
     AnalysisTimeResult AnalysisTime)
 {
     public IReadOnlyList<ParsedActionGroup> UnknownActionGroups { get; init; } = [];
+
+    public IReadOnlyList<LevelingPointSummary> LevelingPointSummaries { get; init; } = [];
 }

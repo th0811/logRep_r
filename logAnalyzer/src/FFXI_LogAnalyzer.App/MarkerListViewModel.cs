@@ -7,6 +7,7 @@ public sealed class MarkerListViewModel
     public MarkerListViewModel(MarkerRecord marker)
     {
         Marker = marker;
+        SessionId = string.IsNullOrWhiteSpace(marker.SourceRecord.SessionId) ? "-" : marker.SourceRecord.SessionId;
         Order = marker.Order?.ToString() ?? "-";
         MarkerKeyword = string.IsNullOrWhiteSpace(marker.MarkerKeyword) ? "-" : marker.MarkerKeyword;
         VisibleText = string.IsNullOrWhiteSpace(marker.VisibleText) ? "-" : marker.VisibleText;
@@ -15,6 +16,8 @@ public sealed class MarkerListViewModel
     }
 
     public MarkerRecord Marker { get; }
+
+    public string SessionId { get; }
 
     public string Order { get; }
 
