@@ -136,10 +136,6 @@ main {
   color: var(--muted);
 }
 
-#globalFilterInput {
-  width: min(520px, 72vw);
-}
-
 input,
 select {
   min-height: 32px;
@@ -167,6 +163,37 @@ select {
 
 #copyStatusText {
   color: var(--accent);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 20px 8px;
+}
+
+.tab-button {
+  border-bottom-color: var(--line-strong);
+}
+
+.tab-button.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: #0f463d;
+}
+
+.tab-panel {
+  min-height: 0;
+  display: none;
+}
+
+.tab-panel.active {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+#replayTabPanel.active {
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .table-shell {
@@ -237,6 +264,45 @@ td.error-cell {
   color: var(--danger);
 }
 
+.log-replay {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin: 0 20px 20px;
+}
+
+.log-window {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--line);
+  background: #101214;
+}
+
+.log-window header {
+  padding: 8px 10px;
+  border-bottom: 1px solid #303438;
+  background: #1b1f22;
+  color: #d7dde2;
+  font-weight: 700;
+}
+
+.log-window-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px;
+}
+
+.log-line {
+  min-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: "Yu Gothic UI", "Meiryo", "Segoe UI", sans-serif;
+  line-height: 1.45;
+  text-shadow: 0 1px 0 #000000;
+}
+
 @media (max-width: 720px) {
   .app-header {
     display: grid;
@@ -253,5 +319,13 @@ td.error-cell {
 
   .table-shell {
     max-height: 62vh;
+  }
+
+  .log-replay {
+    grid-template-columns: 1fr;
+  }
+
+  .log-window {
+    min-height: 320px;
   }
 }

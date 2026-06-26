@@ -41,6 +41,7 @@ public sealed class MarkerDetector
             markerPrefix,
             static prefix => new Regex(
                 Regex.Escape(prefix)
+                + @"[\s\u3000]*"
                 + @"(?<keyword>[A-Za-z0-9_\-:.]+|[^\s\u3000]+)",
                 RegexOptions.CultureInvariant));
     }

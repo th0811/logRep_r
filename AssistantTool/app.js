@@ -40,7 +40,6 @@ const state = {
   columns: [...BASE_COLUMNS],
   filteredIndexes: [],
   columnFilters: new Map(),
-  globalFilter: "",
   page: 0,
   pageSize: 250,
   selected: null,
@@ -50,7 +49,10 @@ const state = {
 const elements = {
   dropZone: document.getElementById("dropZone"),
   fileInput: document.getElementById("fileInput"),
-  globalFilterInput: document.getElementById("globalFilterInput"),
+  tableTabButton: document.getElementById("tableTabButton"),
+  replayTabButton: document.getElementById("replayTabButton"),
+  tableTabPanel: document.getElementById("tableTabPanel"),
+  replayTabPanel: document.getElementById("replayTabPanel"),
   pageSizeSelect: document.getElementById("pageSizeSelect"),
   prevPageButton: document.getElementById("prevPageButton"),
   nextPageButton: document.getElementById("nextPageButton"),
@@ -62,6 +64,8 @@ const elements = {
   clearButton: document.getElementById("clearButton"),
   tableHead: document.getElementById("tableHead"),
   tableBody: document.getElementById("tableBody"),
+  window1Log: document.getElementById("window1Log"),
+  window2Log: document.getElementById("window2Log"),
 };
 
 elements.fileInput.addEventListener("change", () => {
@@ -89,10 +93,12 @@ elements.dropZone.addEventListener("drop", (event) => {
   }
 });
 
-elements.globalFilterInput.addEventListener("input", () => {
-  state.globalFilter = normalizeFilter(elements.globalFilterInput.value);
-  state.page = 0;
-  applyFiltersAndRender();
+elements.tableTabButton.addEventListener("click", () => {
+  activateTab("table");
+});
+
+elements.replayTabButton.addEventListener("click", () => {
+  activateTab("replay");
 });
 
 elements.pageSizeSelect.addEventListener("change", () => {
@@ -147,17 +153,16 @@ async function loadFile(file) {
     state.records = result.records;
     state.columns = buildColumns(result.records);
     state.columnFilters = new Map();
-    state.globalFilter = "";
     state.page = 0;
     state.selected = null;
     state.sourceFileName = file.name;
-    elements.globalFilterInput.value = "";
     elements.clearButton.disabled = false;
     elements.copySelectedButton.disabled = true;
     elements.exportCsvButton.disabled = result.records.length === 0;
 
     renderTableHead();
     applyFiltersAndRender();
+    renderLogReplay();
 
     const errorMessage = result.errors.length
       ? ` / 解析エラー ${result.errors.length} 行`
@@ -341,16 +346,6 @@ function applyFiltersAndRender() {
 }
 
 function matchesRecord(record) {
-  if (state.globalFilter) {
-    const anyMatch = state.columns.some((column) =>
-      normalizeFilter(record[column] ?? "").includes(state.globalFilter),
-    );
-
-    if (!anyMatch) {
-      return false;
-    }
-  }
-
   for (const [column, filter] of state.columnFilters.entries()) {
     if (!normalizeFilter(record[column] ?? "").includes(filter)) {
       return false;
@@ -458,6 +453,60 @@ function paintSelection() {
       cell.classList.add("selected");
     }
   });
+}
+
+function activateTab(tabName) {
+  const isTableTab = tabName === "table";
+  elements.tableTabButton.classList.toggle("active", isTableTab);
+  elements.replayTabButton.classList.toggle("active", !isTableTab);
+  elements.tableTabButton.setAttribute("aria-selected", String(isTableTab));
+  elements.replayTabButton.setAttribute("aria-selected", String(!isTableTab));
+  elements.tableTabPanel.hidden = !isTableTab;
+  elements.replayTabPanel.hidden = isTableTab;
+  elements.tableTabPanel.classList.toggle("active", isTableTab);
+  elements.replayTabPanel.classList.toggle("active", !isTableTab);
+}
+
+function renderLogReplay() {
+  elements.window1Log.textContent = "";
+  elements.window2Log.textContent = "";
+
+  for (const record of state.records) {
+    const windowId = record.window_id;
+    if (windowId !== "1" && windowId !== "2") {
+      continue;
+    }
+
+    const line = document.createElement("div");
+    const visibleText = record.visible_text || "\u00A0";
+    line.className = "log-line";
+    line.textContent = visibleText;
+    line.style.color = toCssColor(record["display.color_code"]);
+    line.title = [
+      `line=${record.__line_number ?? ""}`,
+      `record_index=${record.record_index ?? ""}`,
+      `color_code=${record["display.color_code"] ?? ""}`,
+    ].join(" / ");
+
+    if (windowId === "1") {
+      elements.window1Log.appendChild(line);
+    } else {
+      elements.window2Log.appendChild(line);
+    }
+  }
+}
+
+function toCssColor(colorCode) {
+  const normalized = String(colorCode ?? "").trim();
+  if (/^[0-9a-fA-F]{8}$/.test(normalized)) {
+    return `#${normalized.slice(2)}`;
+  }
+
+  if (/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return `#${normalized}`;
+  }
+
+  return "inherit";
 }
 
 async function copySelectedCells() {
@@ -584,14 +633,14 @@ function clearAll() {
   state.columns = [...BASE_COLUMNS];
   state.filteredIndexes = [];
   state.columnFilters = new Map();
-  state.globalFilter = "";
   state.page = 0;
   state.selected = null;
   state.sourceFileName = "";
   elements.fileInput.value = "";
-  elements.globalFilterInput.value = "";
   elements.tableHead.textContent = "";
   elements.tableBody.textContent = "";
+  elements.window1Log.textContent = "";
+  elements.window2Log.textContent = "";
   elements.clearButton.disabled = true;
   elements.copySelectedButton.disabled = true;
   elements.exportCsvButton.disabled = true;
