@@ -12,6 +12,9 @@ public sealed class MarkerDetectorTests
     [InlineData("/echo ###aminon_start", "aminon_start")]
     [InlineData("/echo ###aminon_end", "aminon_end")]
     [InlineData("/echo ###test", "test")]
+    [InlineData("/echo ### test", "test")]
+    [InlineData("[20:29] ### mark1", "mark1")]
+    [InlineData("/echo ###　test", "test")]
     [InlineData("日本語 ###開始", "開始")]
     public void マーカーを検出できる(
         string visibleText,
@@ -54,7 +57,7 @@ public sealed class MarkerDetectorTests
     [Fact]
     public void 任意のマーカー文字列を使える()
     {
-        const string visibleText = "[21:35] @@@end:aminon";
+        const string visibleText = "[21:35] @@@ end:aminon";
 
         var marker = _detector.Detect(visibleText, "@@@");
 
