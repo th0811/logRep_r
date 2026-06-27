@@ -181,6 +181,7 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="ポイント種別" Binding="{Binding PointName}" Width="220" />
                         <DataGridTextColumn Header="総合計" Binding="{Binding TotalPoints}" Width="140" />
+                        <DataGridTextColumn Header="最大チェーン" Binding="{Binding MaxChainCount}" Width="140" />
                         <DataGridTextColumn Header="時給" Binding="{Binding PointsPerHour}" Width="140" />
                     </DataGrid.Columns>
                 </DataGrid>
