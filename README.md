@@ -12,6 +12,9 @@
 ビルドのやり方がわからない人はReleasesからビルド済みexeを取得してください。
 https://github.com/th0811/logRep_r/releases
 
+ゲーム内ログはデフォルトインストールした場合は
+`C:\Program Files (x86)\PlayOnline\SquareEnix\FINAL FANTASY XI\TEMP`にあるかと思います。
+
 exeファイルは好きな場所に配置してください。
 `logRep_r.exe`と`logAnalyzer.exe`を同じフォルダに格納してもOKです。
 
