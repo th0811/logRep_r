@@ -262,46 +262,7 @@ DPS算出ツールとの連携前提:
 ログ本文に時刻がないレコードでは、`first_seen_at`などを補助情報として利用します。その場合の時刻は厳密なゲーム内イベント時刻ではありません。
 
 
-## 配布用publish
-
-標準配布物は`win-x64`向け自己完結型です。WPF、タスクトレイ、Named Pipe IPCを安定して動作させるため、単一ファイル化は行っていません。publishフォルダーの全ファイルをまとめて配布してください。
-
-```powershell
-dotnet publish src/FfxiTempLogCollector.App/FfxiTempLogCollector.App.csproj `
-  -c Release `
-  -r win-x64 `
-  --self-contained true `
-  -p:PublishProfile=win-x64 `
-  -o artifacts/publish/win-x64
-```
-
-または用意済みスクリプトを実行します。
-
-```powershell
-.\scripts\publish-win-x64.ps1
-```
-
-生成先:
-
-```text
-artifacts/
-└─ publish/
-   └─ win-x64/
-      ├─ FFXI_LogRep_r.exe
-      ├─ config.example.json
-      └─ 実行に必要なDLLおよびランタイムファイル
-```
-
-publish後のCLI確認:
-
-```powershell
-.\artifacts\publish\win-x64\FFXI_LogRep_r.exe help
-```
-
-
-
 ## publish（exeファイルの生成）
-
 .NET 8 SDK とWindows環境が必要です。
 
 https://dotnet.microsoft.com/ja-jp/download/dotnet/8.0
@@ -311,15 +272,24 @@ logAnalyzerフォルダ直下で下記記載のコマンドを実行してくだ
 ### ランタイムなし版
 
 ```powershell
-dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o .\publish\
+dotnet publish src/FfxiTempLogCollector.App/FfxiTempLogCollector.App.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained false `
+  -p:PublishProfile=win-x64 `
+  -o publish/
 ```
 
-
 ### 自己完結形式
-.NET 8 SDKがインストールされていないPCで実行可能ですが、容量が肥大化します。
+.NET 8 SDKがインストールされていないPCでも実行可能ですが、容量が肥大化します。
 
 ```powershell
-dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained ture -p:PublishSingleFile=true -o .\publish\
+dotnet publish src/FfxiTempLogCollector.App/FfxiTempLogCollector.App.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained true `
+  -p:PublishProfile=win-x64 `
+  -o publish/
 ```
 
 ### 出力先

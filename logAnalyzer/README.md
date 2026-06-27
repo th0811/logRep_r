@@ -147,15 +147,25 @@ logAnalyzerフォルダ直下で下記記載のコマンドを実行してくだ
 ### ランタイムなし版
 
 ```powershell
-dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o .\publish\
+dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained false `
+  -p:PublishSingleFile=true `
+  -o publish/
 ```
 
 
 ### 自己完結形式
-.NET 8 SDKがインストールされていないPCで実行可能ですが、容量が肥大化します。
+.NET 8 SDKがインストールされていないPCでも実行可能ですが、容量が肥大化します。
 
 ```powershell
-dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained ture -p:PublishSingleFile=true -o .\publish\
+dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained true `
+  -p:PublishSingleFile=true `
+  -o publish/
 ```
 
 ### 出力先
