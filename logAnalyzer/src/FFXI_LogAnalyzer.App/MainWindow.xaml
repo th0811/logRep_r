@@ -20,18 +20,21 @@
 
     <DockPanel Margin="16">
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
-            <Button Content="セッション追加" Command="{Binding AddSessionCommand}" />
-            <Button Content="フォルダ内セッションを追加" Command="{Binding AddSessionsFromFolderCommand}" />
+            <Button Content="セッション出力先選択" Command="{Binding SelectSessionRootFolderCommand}" />
+            <Button Content="更新" Command="{Binding RefreshSessionsCommand}" />
             <Button Content="選択解除" Command="{Binding RemoveSelectedSessionCommand}" />
             <Button Content="すべて解除" Command="{Binding ClearSessionsCommand}" />
-            <Button Content="分析区間選択へ進む" Command="{Binding ProceedToRangeSelectionCommand}" />
             <TextBlock Text="{Binding StatusMessage}" Margin="8,0,0,0" TextWrapping="Wrap" />
         </StackPanel>
 
         <Border DockPanel.Dock="Top" BorderBrush="#D0D7DE" BorderThickness="1" Padding="10" Margin="0,0,0,12">
             <StackPanel>
                 <TextBlock Text="読み込み状態" FontWeight="Bold" Margin="0,0,0,6" />
+                <TextBlock Text="セッション出力先" FontWeight="Bold" />
+                <TextBlock Text="{Binding SessionRootFolderPath}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                <TextBlock Text="分析対象" FontWeight="Bold" />
                 <TextBlock Text="{Binding SelectedFolderPath}" TextWrapping="Wrap" />
+                <TextBlock Text="セッションフォルダ選択後は、分析区間タブに進んでください" Margin="0,8,0,0" />
             </StackPanel>
         </Border>
 

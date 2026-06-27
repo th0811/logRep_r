@@ -261,14 +261,6 @@ DPS算出ツールとの連携前提:
 
 ログ本文に時刻がないレコードでは、`first_seen_at`などを補助情報として利用します。その場合の時刻は厳密なゲーム内イベント時刻ではありません。
 
-## 開発・ビルド
-
-リポジトリルートで実行します。
-
-```powershell
-dotnet build FfxiTempLogCollector.sln -c Release
-dotnet test FfxiTempLogCollector.sln -c Release
-```
 
 ## 配布用publish
 
@@ -304,6 +296,42 @@ publish後のCLI確認:
 
 ```powershell
 .\artifacts\publish\win-x64\FFXI_LogRep_r.exe help
+```
+
+
+
+## publish（exeファイルの生成）
+
+.NET 8 SDK とWindows環境が必要です。
+
+https://dotnet.microsoft.com/ja-jp/download/dotnet/8.0
+
+logAnalyzerフォルダ直下で下記記載のコマンドを実行してください。
+
+### ランタイムなし版
+
+```powershell
+dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o .\publish\
+```
+
+
+### 自己完結形式
+.NET 8 SDKがインストールされていないPCで実行可能ですが、容量が肥大化します。
+
+```powershell
+dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained ture -p:PublishSingleFile=true -o .\publish\
+```
+
+### 出力先
+上記コマンドでの出力先は、次のディレクトリです。
+
+```text
+./publish
+```
+
+## ビルド（開発者向け）
+```powershell
+dotnet build FfxiTempLogCollector.sln
 ```
 
 ## 運用手順

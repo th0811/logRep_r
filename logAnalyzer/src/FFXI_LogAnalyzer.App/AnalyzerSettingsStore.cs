@@ -68,9 +68,17 @@ public sealed class AnalyzerSettingsStore
     {
         return new AnalyzerSettings
         {
+            SessionsRootFolderPath = NormalizeFolderPath(settings.SessionsRootFolderPath),
             KnownPcNames = NormalizePcNames(settings.KnownPcNames),
             KnownNpcNames = NormalizeNpcNames(settings.KnownNpcNames)
         };
+    }
+
+    private static string? NormalizeFolderPath(string? folderPath)
+    {
+        return string.IsNullOrWhiteSpace(folderPath)
+            ? null
+            : folderPath.Trim();
     }
 
     private static List<string> NormalizePcNames(IEnumerable<string> names)

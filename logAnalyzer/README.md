@@ -18,32 +18,25 @@ stats.json
 
 `canonical_records.jsonl` はログ収集アプリがFFXI TEMPログを読み取り、重複排除や正規化を行った結果です。`FFXI_LogAnalyzer` はこのファイルを読み込んで分析します。
 
-## 対象外
+## 使い方
 
-MVPでは次の機能は対象外です。
-
-- FFXI TEMPログファイルの直接読み込み
-- ログ収集機能
-- `canonical_records.jsonl` の生成
-- ログウィンドウ1/2の選択
-- CSV/Excelエクスポート
-- リアルタイム更新
-- actor名の別名統合
-- ペット、フェイス、召喚獣などの帰属補正
-- 高度なバフ/デバフ判定
-- 全ログ表現を網羅した完全な解析ルール
-
-## セッションフォルダの読み込み
+## セッションフォルダを読み込む
 
 1. アプリを起動します。
-2. `セッションフォルダを開く` を選択します。
-3. ログ収集アプリが出力したセッションフォルダを選択します。
+2. `セッション追加`または`フォルダ内セッションを追加` を選択します。
+   - `セッション追加`は単一セッション
+
+3. 分析対象としたいセッションフォルダを選択します。
 4. `session.json`、`canonical_records.jsonl`、`stats.json` が読み込まれます。
-5. marker一覧とセッション情報が表示されます。
+5. セッション情報が表示されます。
 
 `session.json` の `status` が `completed` 以外の場合、ログ欠損や未確定データを含む可能性があります。MVPでは警告を表示し、ユーザーが確認した場合のみ読み込みます。
 
 ## 分析区間
+
+ゲーム内チャットの特定のキーワードを目印（marker）して分析区間の開始／終了ポイントとして指定可能です。  
+デフォルトでは` ### `という文字列がある行をmarker行としていますが任意値に変更可能です。  
+例） `/echo ### ここからAminon戦開始` のようなチャットをする
 
 分析区間は開始ポイントと終了ポイントで指定します。
 
@@ -143,34 +136,37 @@ actorまたはactionを特定できないログ、またはhit_statusやaction_t
 
 未解析ログはDPS集計から除外されます。
 
-## ビルド
+## publish（exeファイルの生成）
 
 .NET 8 SDK とWindows環境が必要です。
+
+https://dotnet.microsoft.com/ja-jp/download/dotnet/8.0
+
+logAnalyzerフォルダ直下で下記記載のコマンドを実行してください。
+
+### ランタイムなし版
+
+```powershell
+dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o .\publish\
+```
+
+
+### 自己完結形式
+.NET 8 SDKがインストールされていないPCで実行可能ですが、容量が肥大化します。
+
+```powershell
+dotnet publish .\src\FFXI_LogAnalyzer.App\FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained ture -p:PublishSingleFile=true -o .\publish\
+```
+
+### 出力先
+上記コマンドでの出力先は、次のディレクトリです。
+
+```text
+./publish
+```
+
+## ビルド（開発者向け）
 
 ```powershell
 dotnet build .\FFXI_LogAnalyzer.sln
 ```
-
-## テスト
-
-```powershell
-dotnet test .\FFXI_LogAnalyzer.sln
-```
-
-統合テストでは `tests/FFXI_LogAnalyzer.Tests/fixtures/sample_session/` のサンプルセッションを相対パスで参照し、セッション読み込みから集計までを検証します。
-
-## publish
-
-Windows x64向けの自己完結形式で配布物を作成する例です。
-
-```powershell
-dotnet publish src/FFXI_LogAnalyzer.App/FFXI_LogAnalyzer.App.csproj -c Release -r win-x64 --self-contained true
-```
-
-出力先は通常、次のディレクトリです。
-
-```text
-src/FFXI_LogAnalyzer.App/bin/Release/net8.0-windows/win-x64/publish/
-```
-
-配布時はpublish出力ディレクトリ一式を配布してください。

@@ -46,8 +46,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OpenOutputCommand = new RelayCommand(
             _controller.OpenOutputDirectory,
             () => !IsShuttingDown);
-        OpenLogCommand = new RelayCommand(
-            _controller.OpenLog,
+        OpenTempCommand = new RelayCommand(
+            _controller.OpenTempDirectory,
             () => !IsShuttingDown);
         MinimizeCommand = new RelayCommand(
             _controller.MinimizeToTray,
@@ -139,7 +139,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public RelayCommand OpenOutputCommand { get; }
 
-    public RelayCommand OpenLogCommand { get; }
+    public RelayCommand OpenTempCommand { get; }
 
     public RelayCommand MinimizeCommand { get; }
 
@@ -305,7 +305,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         StopCommand.RaiseCanExecuteChanged();
         SettingsCommand.RaiseCanExecuteChanged();
         OpenOutputCommand.RaiseCanExecuteChanged();
-        OpenLogCommand.RaiseCanExecuteChanged();
+        OpenTempCommand.RaiseCanExecuteChanged();
         MinimizeCommand.RaiseCanExecuteChanged();
         ExitCommand.RaiseCanExecuteChanged();
     }

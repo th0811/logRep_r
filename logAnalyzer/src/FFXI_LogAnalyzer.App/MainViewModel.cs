@@ -10,34 +10,54 @@ public sealed class MainViewModel : INotifyPropertyChanged
 {
     private readonly SessionOpenService _sessionOpenService;
     private readonly DialogService _dialogService;
+    private readonly AnalyzerSettingsStore _settingsStore;
     private readonly CanonicalRecordReader _canonicalRecordReader = new();
+    private AnalyzerSettings _settings;
     private SessionSelectionViewModel? _selectedSession;
-    private string _statusMessage = "セッションフォルダを追加してください。";
+    private string _statusMessage = "セッション出力先フォルダを選択してください。";
+    private string _sessionRootFolderPath = "未選択";
     private string _selectedFolderPath = "未選択";
 
     public MainViewModel(SessionOpenService sessionOpenService, DialogService dialogService)
+        : this(
+            sessionOpenService,
+            dialogService,
+            new AnalyzerSettingsStore())
     {
-        _sessionOpenService = sessionOpenService;
-        _dialogService = dialogService;
+    }
+
+    public MainViewModel(
+        SessionOpenService sessionOpenService,
+        DialogService dialogService,
+        AnalyzerSettingsStore settingsStore)
+    {
+        _sessionOpenService = sessionOpenService
+            ?? throw new ArgumentNullException(nameof(sessionOpenService));
+        _dialogService = dialogService
+            ?? throw new ArgumentNullException(nameof(dialogService));
+        _settingsStore = settingsStore
+            ?? throw new ArgumentNullException(nameof(settingsStore));
+        _settings = _settingsStore.Load();
+        AnalysisResult = new AnalysisResultViewModel(_settingsStore);
         AnalysisRange.AnalysisCompleted += OnAnalysisCompleted;
-        AddSessionCommand = new RelayCommand(AddSession);
-        AddSessionsFromFolderCommand = new RelayCommand(AddSessionsFromFolder);
+        SelectSessionRootFolderCommand = new RelayCommand(SelectSessionRootFolder);
+        RefreshSessionsCommand = new RelayCommand(
+            RefreshSessions,
+            () => HasSessionRootFolder);
         RemoveSelectedSessionCommand = new RelayCommand(RemoveSelectedSession, () => SelectedSession is not null);
         ClearSessionsCommand = new RelayCommand(ClearSessions, () => Sessions.Count > 0);
-        ProceedToRangeSelectionCommand = new RelayCommand(ProceedToRangeSelection, () => HasSession);
+        LoadConfiguredSessionRoot();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public RelayCommand AddSessionCommand { get; }
+    public RelayCommand SelectSessionRootFolderCommand { get; }
 
-    public RelayCommand AddSessionsFromFolderCommand { get; }
+    public RelayCommand RefreshSessionsCommand { get; }
 
     public RelayCommand RemoveSelectedSessionCommand { get; }
 
     public RelayCommand ClearSessionsCommand { get; }
-
-    public RelayCommand ProceedToRangeSelectionCommand { get; }
 
     public ObservableCollection<SessionSelectionViewModel> Sessions { get; } = [];
 
@@ -47,7 +67,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public AnalysisRangeViewModel AnalysisRange { get; } = new();
 
-    public AnalysisResultViewModel AnalysisResult { get; } = new();
+    public AnalysisResultViewModel AnalysisResult { get; }
 
     public SessionSelectionViewModel? SelectedSession
     {
@@ -67,6 +87,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         private set => SetProperty(ref _statusMessage, value);
     }
 
+    public string SessionRootFolderPath
+    {
+        get => _sessionRootFolderPath;
+        private set => SetProperty(ref _sessionRootFolderPath, value);
+    }
+
     public string SelectedFolderPath
     {
         get => _selectedFolderPath;
@@ -75,33 +101,71 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public bool HasSession => Sessions.Any(session => session.IsEnabled);
 
-    private void AddSession()
-    {
-        var folderPath = _dialogService.SelectSessionFolder();
-        if (string.IsNullOrWhiteSpace(folderPath))
-        {
-            StatusMessage = "セッション追加をキャンセルしました。";
-            return;
-        }
+    public bool HasSessionRootFolder => !string.IsNullOrWhiteSpace(_settings.SessionsRootFolderPath);
 
-        AddSessionFromPath(folderPath, showError: true);
-        RefreshCombinedSession();
-    }
-
-    private void AddSessionsFromFolder()
+    private void SelectSessionRootFolder()
     {
         var folderPath = _dialogService.SelectSessionsRootFolder();
         if (string.IsNullOrWhiteSpace(folderPath))
         {
-            StatusMessage = "フォルダ内セッション追加をキャンセルしました。";
+            StatusMessage = "セッション出力先選択をキャンセルしました。";
             return;
         }
 
-        var sessionFolders = Directory
-            .EnumerateDirectories(folderPath)
-            .Where(directory => File.Exists(Path.Combine(directory, "session.json")))
-            .Order(StringComparer.Ordinal)
-            .ToArray();
+        _settings.SessionsRootFolderPath = Path.GetFullPath(folderPath);
+        _settingsStore.Save(_settings);
+        _settings = _settingsStore.Load();
+        SessionRootFolderPath = _settings.SessionsRootFolderPath ?? "未選択";
+        RefreshCommandStates();
+        ReloadSessionsFromRoot(preserveEnabledStates: true);
+    }
+
+    private void RefreshSessions()
+    {
+        ReloadSessionsFromRoot(preserveEnabledStates: true);
+    }
+
+    private void LoadConfiguredSessionRoot()
+    {
+        if (string.IsNullOrWhiteSpace(_settings.SessionsRootFolderPath))
+        {
+            SessionRootFolderPath = "未選択";
+            StatusMessage = "セッション出力先フォルダを選択してください。";
+            RefreshCommandStates();
+            return;
+        }
+
+        SessionRootFolderPath = _settings.SessionsRootFolderPath;
+        ReloadSessionsFromRoot(preserveEnabledStates: true);
+    }
+
+    private void ReloadSessionsFromRoot(bool preserveEnabledStates)
+    {
+        if (string.IsNullOrWhiteSpace(_settings.SessionsRootFolderPath))
+        {
+            ClearSessionsInternal();
+            StatusMessage = "セッション出力先フォルダを選択してください。";
+            return;
+        }
+
+        var rootFolderPath = _settings.SessionsRootFolderPath;
+        SessionRootFolderPath = rootFolderPath;
+        if (!Directory.Exists(rootFolderPath))
+        {
+            ClearSessionsInternal();
+            StatusMessage = "設定済みセッションフォルダが見つかりません";
+            return;
+        }
+
+        IReadOnlyDictionary<string, bool> enabledStates = preserveEnabledStates
+            ? Sessions.ToDictionary(
+                session => session.FolderPath,
+                session => session.IsEnabled,
+                StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        ClearSessionsInternal();
+
+        var sessionFolders = GetSessionFolders(rootFolderPath);
 
         if (sessionFolders.Length == 0)
         {
@@ -112,17 +176,39 @@ public sealed class MainViewModel : INotifyPropertyChanged
         var added = 0;
         foreach (var sessionFolder in sessionFolders)
         {
-            if (AddSessionFromPath(sessionFolder, showError: false))
+            var isEnabled = enabledStates.TryGetValue(sessionFolder, out var previousIsEnabled)
+                ? previousIsEnabled
+                : true;
+            if (AddSessionFromPath(sessionFolder, showError: false, isEnabled))
             {
                 added++;
             }
         }
 
         RefreshCombinedSession();
-        StatusMessage = $"{added:N0} 件のセッションを追加しました。";
+        StatusMessage = $"{added:N0} 件のセッションを読み込みました。";
     }
 
-    private bool AddSessionFromPath(string folderPath, bool showError)
+    private static string[] GetSessionFolders(string rootFolderPath)
+    {
+        try
+        {
+            return Directory
+                .EnumerateDirectories(rootFolderPath)
+                .Where(directory => File.Exists(Path.Combine(directory, "session.json")))
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    private bool AddSessionFromPath(
+        string folderPath,
+        bool showError,
+        bool isEnabled)
     {
         var normalizedFolderPath = Path.GetFullPath(folderPath);
         if (Sessions.Any(session => string.Equals(
@@ -176,6 +262,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             result.Session,
             canonicalRecords.Records,
             warnings);
+        session.IsEnabled = isEnabled;
         session.PropertyChanged += OnSessionSelectionChanged;
         Sessions.Add(session);
         SelectedSession = session;
@@ -199,6 +286,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void ClearSessions()
     {
+        ClearSessionsInternal();
+        StatusMessage = "セッション選択をすべて解除しました。";
+    }
+
+    private void ClearSessionsInternal()
+    {
         foreach (var session in Sessions)
         {
             session.PropertyChanged -= OnSessionSelectionChanged;
@@ -207,12 +300,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         Sessions.Clear();
         SelectedSession = null;
         RefreshCombinedSession();
-        StatusMessage = "セッション選択をすべて解除しました。";
-    }
-
-    private void ProceedToRangeSelection()
-    {
-        _dialogService.ShowInformation("分析区間タブで開始・終了ポイントを選択してください。");
     }
 
     private void RefreshCombinedSession()
@@ -361,7 +448,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void RefreshCommandStates()
     {
         OnPropertyChanged(nameof(HasSession));
-        ProceedToRangeSelectionCommand.RaiseCanExecuteChanged();
+        OnPropertyChanged(nameof(HasSessionRootFolder));
+        RefreshSessionsCommand.RaiseCanExecuteChanged();
         RemoveSelectedSessionCommand.RaiseCanExecuteChanged();
         ClearSessionsCommand.RaiseCanExecuteChanged();
     }
