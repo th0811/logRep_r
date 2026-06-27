@@ -10,6 +10,7 @@
 ビルドには`.NET 8 SDK`が必要です。
 
 ビルドのやり方がわからない人はReleasesからビルド済みexeを取得してください。
+https://github.com/th0811/logRep_r/releases
 
 exeファイルは好きな場所に配置してください。
 `logRep_r.exe`と`logAnalyzer.exe`を同じフォルダに格納してもOKです。
