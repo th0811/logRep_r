@@ -23,6 +23,10 @@ public sealed partial class LevelingPointAggregator
             pointName => pointName,
             _ => 0L,
             StringComparer.Ordinal);
+        var maxChains = PointNames.ToDictionary(
+            pointName => pointName,
+            _ => 0,
+            StringComparer.Ordinal);
 
         foreach (var record in records)
         {
@@ -46,12 +50,21 @@ public sealed partial class LevelingPointAggregator
             totals[pointName] += long.Parse(
                 match.Groups["points"].Value,
                 CultureInfo.InvariantCulture);
+
+            if (match.Groups["chain"].Success)
+            {
+                var chain = int.Parse(
+                    match.Groups["chain"].Value,
+                    CultureInfo.InvariantCulture);
+                maxChains[pointName] = Math.Max(maxChains[pointName], chain);
+            }
         }
 
         return PointNames
             .Select(pointName => new LevelingPointSummary(
                 pointName,
                 totals[pointName],
+                maxChains[pointName],
                 CalculatePointsPerHour(totals[pointName], analysisTime)))
             .ToArray();
     }
@@ -69,6 +82,6 @@ public sealed partial class LevelingPointAggregator
         return totalPoints * 3600.0 / analysisTime.DurationSeconds!.Value;
     }
 
-    [GeneratedRegex(@"^→?.+?は、(?<points>\d+)(?<pointName>経験値|リミットポイント|エクゼンプラーポイント)を獲得した。?$")]
+    [GeneratedRegex(@"^→?.+?は、(?:(?<chain>\d+)チェーン[！!])?(?<points>\d+)(?<pointName>経験値|リミットポイント|エクゼンプラーポイント)を獲得した。?$")]
     private static partial Regex PointGainRegex();
 }
