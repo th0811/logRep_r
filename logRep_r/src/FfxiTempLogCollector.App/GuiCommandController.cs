@@ -9,8 +9,6 @@ namespace FfxiTempLogCollector.App;
 
 public sealed class GuiCommandController : IAsyncDisposable
 {
-    private const string CollectorLogFileName = "collector.log";
-
     private readonly CollectorService _collectorService;
     private readonly ConfigEditService _configEditService;
     private readonly FolderPickerService _folderPickerService;
@@ -136,19 +134,9 @@ public sealed class GuiCommandController : IAsyncDisposable
         OpenDirectory(Config.OutputDir, "出力先フォルダー");
     }
 
-    public void OpenLog()
+    public void OpenTempDirectory()
     {
-        var status = GetStatus();
-        var directory = status.SessionDirectory ?? Config.OutputDir;
-        var logPath = Path.Combine(directory, CollectorLogFileName);
-
-        if (File.Exists(logPath))
-        {
-            StartShell(logPath);
-            return;
-        }
-
-        OpenDirectory(directory, "ログフォルダー");
+        OpenDirectory(Config.TempDir, "TEMPフォルダー");
     }
 
     public void MinimizeToTray()

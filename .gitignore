@@ -4,6 +4,7 @@
 artifacts/
 
 # Test and coverage outputs
+tests/
 TestResults/
 **/TestResults/
 *.trx
@@ -39,6 +40,9 @@ config.*.local.json
 .tmp/
 collector.log
 sessions/
+
+## Local scripts and tools
+scripts/
 
 # Temporary and backup files
 *.tmp

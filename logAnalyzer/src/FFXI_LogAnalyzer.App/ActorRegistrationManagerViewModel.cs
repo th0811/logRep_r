@@ -8,6 +8,7 @@ namespace FFXI_LogAnalyzer.App;
 public sealed class ActorRegistrationManagerViewModel : INotifyPropertyChanged
 {
     private readonly Action<AnalyzerSettings> _save;
+    private readonly string? _sessionsRootFolderPath;
     private string _pcNameInput = string.Empty;
     private string _npcNameInput = string.Empty;
     private string? _selectedPcName;
@@ -19,6 +20,7 @@ public sealed class ActorRegistrationManagerViewModel : INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(settings);
         _save = save ?? throw new ArgumentNullException(nameof(save));
+        _sessionsRootFolderPath = settings.SessionsRootFolderPath;
 
         foreach (var name in settings.KnownPcNames)
         {
@@ -143,6 +145,7 @@ public sealed class ActorRegistrationManagerViewModel : INotifyPropertyChanged
         _save(
             new AnalyzerSettings
             {
+                SessionsRootFolderPath = _sessionsRootFolderPath,
                 KnownPcNames = [.. PcNames],
                 KnownNpcNames = [.. NpcNames]
             });

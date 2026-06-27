@@ -22,7 +22,7 @@ public sealed class DialogService
     {
         using var dialog = new FolderBrowserDialog
         {
-            Description = "sessions フォルダを選択してください。",
+            Description = "セッション出力先フォルダを選択してください。",
             UseDescriptionForTitle = true
         };
 

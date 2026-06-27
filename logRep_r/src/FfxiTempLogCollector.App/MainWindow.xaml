@@ -192,12 +192,12 @@
                     <Button Width="112"
                             Height="34"
                             Margin="0,0,8,0"
+                            Command="{Binding OpenTempCommand}"
+                            Content="TEMPを開く" />
+                    <Button Width="112"
+                            Height="34"
                             Command="{Binding OpenOutputCommand}"
                             Content="出力先を開く" />
-                    <Button Width="96"
-                            Height="34"
-                            Command="{Binding OpenLogCommand}"
-                            Content="ログを開く" />
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Right"
