@@ -14,6 +14,14 @@ TestResults/
 coverage/
 coverage.*
 
+# LogRep2の回帰テストはソース管理対象
+!logRep2/tests/
+!logRep2/tests/*/
+!logRep2/tests/*/*.cs
+!logRep2/tests/*/*.csproj
+!logRep2/tests/*/fixtures/
+!logRep2/tests/*/fixtures/**
+
 # NuGet packages and generated packages
 packages/
 *.nupkg
